@@ -6,3 +6,7 @@
 //
 
 import Foundation
+
+protocol NetworkService {
+    func performRequest(_ endpoint: Endpoint) async throws -> Data
+}

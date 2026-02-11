@@ -6,3 +6,9 @@
 //
 
 import Foundation
+
+enum EmployeeEndpoint {
+    static var getEmployees: Endpoint {
+        Endpoint(path: "/employees", method: .get, queryItems: nil)
+    }
+}
