@@ -6,3 +6,7 @@
 //
 
 import Foundation
+
+protocol DateParsing {
+    func parse(_ string: String) -> Date?
+}
