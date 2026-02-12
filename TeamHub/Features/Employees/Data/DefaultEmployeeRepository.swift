@@ -282,5 +282,15 @@ final class DefaultEmployeeRepository: EmployeeRepository {
 
         return Array(roles).sorted()
     }
+    
+    func employee(by id: String) throws -> Employee? {
+
+        let descriptor = FetchDescriptor<EmployeeEntity>(
+            predicate: #Predicate<EmployeeEntity> { $0.id == id }
+        )
+
+        return try context.fetch(descriptor).first?.toDomain()
+    }
+
 
 }

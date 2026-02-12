@@ -10,6 +10,9 @@ import Foundation
 protocol EmployeeRepository {
 
     func fetchAndSync(force: Bool) async throws
+    
+    func employee(by id: String) throws -> Employee?
+
 
     func fetchPage(
         searchText: String?,

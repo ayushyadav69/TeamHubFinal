@@ -11,58 +11,36 @@ import SwiftData
 @main
 struct TeamHubApp: App {
 
-    private let container: ModelContainer
-    private let networkMonitor: NetworkMonitor
-    private let repository: EmployeeRepository
-    private let employeeListViewModel: EmployeeListViewModel
-
-    init() {
-
-        // SwiftData
-        container = SwiftDataStack.shared.container
-
-        // Network Monitor
-        networkMonitor = NetworkMonitor.shared
-        networkMonitor.start()
-
-        // Networking Layer
-        let networkService = URLSessionNetworkService()
-        let decoder = JSONResponseDecoder()
-        let apiClient = APIClient(
-            networkService: networkService,
-            decoder: decoder
-        )
-
-        // Utilities
-        let dateParser = APIDateParser()
-        let syncPolicy = DefaultSyncPolicy()
-
-        // Repository
-        repository = DefaultEmployeeRepository(
-            apiClient: apiClient,
-            container: container,
-            dateParser: dateParser,
-            syncPolicy: syncPolicy,
-            networkMonitor: networkMonitor
-        )
-
-        // ViewModel
-        employeeListViewModel = EmployeeListViewModel(
-            repository: repository,
-            networkMonitor: networkMonitor
-        )
-
-        // Background Sync
-        BackgroundSyncManager.shared.register(repository: repository)
-        BackgroundSyncManager.shared.schedule()
-    }
+    @State private var container = AppDIContainer()
+    @State private var coordinator = AppCoordinator()
 
     var body: some Scene {
         WindowGroup {
-            EmployeeListView()
-                .environment(employeeListViewModel)
-                .environment(networkMonitor)
-                .modelContainer(container)
+
+            NavigationStack(path: $coordinator.path) {
+
+                EmployeeListView()
+
+                    .navigationDestination(for: AppRoute.self) { route in
+                        switch route {
+
+                        case .employeeDetail(let id):
+                            EmployeeDetailView(
+                                viewModel: EmployeeDetailViewModel(
+                                    employeeID: id,
+                                    repository: container.employeeRepository
+                                )
+                            )
+                        }
+                    }
+
+
+            }
+            // 🔴 INJECT HERE — ON STACK ROOT
+            .environment(container.employeeListViewModel)
+            .environment(coordinator)
+            .modelContainer(container.modelContainer)
         }
     }
 }
+

@@ -10,6 +10,7 @@ import SwiftUI
 struct EmployeeListView: View {
 
     @Environment(EmployeeListViewModel.self) private var viewModel
+    @Environment(AppCoordinator.self) private var coordinator
 
     var body: some View {
 
@@ -64,12 +65,12 @@ private extension EmployeeListView {
     func list(vm: EmployeeListViewModel) -> some View {
 
         List {
-
-            // 🔹 Stats Section (Enterprise touch)
-            statsSection(vm: vm)
-
             ForEach(vm.employees) { employee in
                 EmployeeRowView(employee: employee)
+                    .contentShape(Rectangle()) // full row tappable
+                    .onTapGesture {
+                        coordinator.goToDetail(employeeID: employee.id)
+                    }
                     .onAppear {
                         vm.loadMoreIfNeeded(current: employee)
                     }
@@ -85,6 +86,7 @@ private extension EmployeeListView {
         }
         .listStyle(.plain)
     }
+
 }
 private extension EmployeeListView {
 
