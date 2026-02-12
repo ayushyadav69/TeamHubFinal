@@ -15,22 +15,36 @@ final class DefaultEmployeeRepository: EmployeeRepository {
     private let apiClient: APIClient
     private let context: ModelContext
     private let dateParser: DateParsing
-
-    // MARK: - Init
+    private let syncPolicy: SyncPolicy
+    private let networkMonitor: NetworkMonitor
 
     init(
         apiClient: APIClient,
         container: ModelContainer,
-        dateParser: DateParsing
+        dateParser: DateParsing,
+        syncPolicy: SyncPolicy,
+        networkMonitor: NetworkMonitor = .shared
     ) {
         self.apiClient = apiClient
         self.context = ModelContext(container)
         self.dateParser = dateParser
+        self.syncPolicy = syncPolicy
+        self.networkMonitor = networkMonitor
     }
 
-    // MARK: - Public API
+    // MARK: - Sync
 
-    func fetchAndSync() async throws {
+    @MainActor
+    func fetchAndSync(force: Bool) async throws {
+
+        guard networkMonitor.isConnected else {
+            print("⚠️ No internet. Skipping sync.")
+            return
+        }
+
+        if !force && !syncPolicy.shouldSync() {
+            return
+        }
 
         let response: EmployeeResponseDTO =
             try await apiClient.request(EmployeeEndpoint.getEmployees)
@@ -40,19 +54,74 @@ final class DefaultEmployeeRepository: EmployeeRepository {
         }
 
         try sync(domainEmployees)
+
+        syncPolicy.markSynced()
     }
 
-    func fetchFromDatabase() throws -> [Employee] {
 
-        let descriptor = FetchDescriptor<EmployeeEntity>()
+
+    // MARK: - Paging + Filtering
+
+    func fetchPage(
+        searchText: String?,
+        department: String?,
+        role: String?,
+        isActiveOnly: Bool,
+        paging: PagingRequest
+    ) throws -> [Employee] {
+
+        let search = searchText?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let dept = department
+        let r = role
+        let activeOnly = isActiveOnly
+
+        var descriptor = FetchDescriptor<EmployeeEntity>(
+            predicate: #Predicate<EmployeeEntity> { entity in
+                (search == nil || entity.name.localizedStandardContains(search!)) &&
+                (dept == nil || entity.department == dept!) &&
+                (r == nil || entity.role == r!) &&
+                (!activeOnly || entity.isActive == true)
+            },
+            sortBy: [SortDescriptor(\.name)]
+        )
+
+        descriptor.fetchLimit = paging.pageSize
+        descriptor.fetchOffset = paging.offset
+
         let entities = try context.fetch(descriptor)
 
         return entities.map { $0.toDomain() }
     }
 
+    func totalCount(
+        searchText: String?,
+        department: String?,
+        role: String?,
+        isActiveOnly: Bool
+    ) throws -> Int {
+
+        let search = searchText
+        let dept = department
+        let r = role
+        let activeOnly = isActiveOnly
+
+        let descriptor = FetchDescriptor<EmployeeEntity>(
+            predicate: #Predicate<EmployeeEntity> { entity in
+                (search == nil || entity.name.localizedStandardContains(search!)) &&
+                (dept == nil || entity.department == dept!) &&
+                (r == nil || entity.role == r!) &&
+                (!activeOnly || entity.isActive == true)
+            }
+        )
+
+        return try context.fetchCount(descriptor)
+    }
+
+    // MARK: - Update / Delete
+
     func update(_ employee: Employee) throws {
 
-        let id = employee.id  // Freeze for predicate
+        let id = employee.id
 
         let descriptor = FetchDescriptor<EmployeeEntity>(
             predicate: #Predicate<EmployeeEntity> { entity in
@@ -69,7 +138,7 @@ final class DefaultEmployeeRepository: EmployeeRepository {
 
     func delete(_ employee: Employee) throws {
 
-        let id = employee.id  // Freeze for predicate
+        let id = employee.id
 
         let descriptor = FetchDescriptor<EmployeeEntity>(
             predicate: #Predicate<EmployeeEntity> { entity in
@@ -80,33 +149,31 @@ final class DefaultEmployeeRepository: EmployeeRepository {
         guard let entity = try context.fetch(descriptor).first else { return }
 
         context.delete(entity)
-
         try context.save()
     }
 
-    // MARK: - Private Sync Logic
+    // MARK: - Sync Logic
 
     private func sync(_ remoteEmployees: [Employee]) throws {
 
         let descriptor = FetchDescriptor<EmployeeEntity>()
         let localEntities = try context.fetch(descriptor)
 
-        var localDictionary = Dictionary(
+        var localDict = Dictionary(
             uniqueKeysWithValues: localEntities.map { ($0.id, $0) }
         )
 
         let remoteIDs = Set(remoteEmployees.map { $0.id })
 
-        // Insert or Update
         for employee in remoteEmployees {
 
-            if let existing = localDictionary[employee.id] {
+            if let existing = localDict[employee.id] {
 
                 if hasChanges(existing, comparedTo: employee) {
                     applyChanges(from: employee, to: existing)
                 }
 
-                localDictionary.removeValue(forKey: employee.id)
+                localDict.removeValue(forKey: employee.id)
 
             } else {
 
@@ -115,8 +182,7 @@ final class DefaultEmployeeRepository: EmployeeRepository {
             }
         }
 
-        // Delete removed employees
-        for remaining in localDictionary.values {
+        for remaining in localDict.values {
             if !remoteIDs.contains(remaining.id) {
                 context.delete(remaining)
             }
@@ -129,20 +195,18 @@ final class DefaultEmployeeRepository: EmployeeRepository {
 
     private func hasChanges(_ entity: EmployeeEntity, comparedTo employee: Employee) -> Bool {
 
-        return entity.name != employee.name ||
-               entity.role != employee.role ||
-               entity.department != employee.department ||
-               entity.isActive != employee.isActive ||
-               entity.imageURL != employee.imageURL?.absoluteString ||
-               entity.email != employee.email ||
-               entity.city != employee.city ||
-               entity.country != employee.country ||
-               entity.joiningDate != employee.joiningDate
+        entity.name != employee.name ||
+        entity.role != employee.role ||
+        entity.department != employee.department ||
+        entity.isActive != employee.isActive ||
+        entity.imageURL != employee.imageURL?.absoluteString ||
+        entity.email != employee.email ||
+        entity.city != employee.city ||
+        entity.country != employee.country ||
+        entity.joiningDate != employee.joiningDate
     }
 
     private func applyChanges(from employee: Employee, to entity: EmployeeEntity) {
-
-        // IMPORTANT: ID is immutable and never modified
 
         entity.name = employee.name
         entity.role = employee.role
@@ -153,9 +217,5 @@ final class DefaultEmployeeRepository: EmployeeRepository {
         entity.city = employee.city
         entity.country = employee.country
         entity.joiningDate = employee.joiningDate
-
-        // Future-ready:
-        // entity.isFavorite = employee.isFavorite
-        // entity.isExcellentPerformer = employee.isExcellentPerformer
     }
 }
