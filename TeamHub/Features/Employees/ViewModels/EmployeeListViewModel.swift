@@ -20,22 +20,40 @@ final class EmployeeListViewModel {
     // MARK: - UI State
 
     var employees: [Employee] = []
+
+    var searchText: String = "" {
+        didSet { resetAndReload() }
+    }
+
+    var selectedDepartment: String? {
+        didSet { resetAndReload() }
+    }
+
+    var selectedRole: String? {
+        didSet { resetAndReload() }
+    }
+
+    var showActiveOnly: Bool = false {
+        didSet { resetAndReload() }
+    }
+
+    // 🔥 DB-Level Counts (not page-level)
+    var totalCount: Int = 0
+    var activeCount: Int = 0
+    var inactiveCount: Int = 0
+
+    var departments: [String] = []
+    var roles: [String] = []
+
     var isLoading = false
     var errorMessage: String?
     var isOffline = false
 
-    // Filters
-    var searchText: String?
-    var selectedDepartment: String?
-    var selectedRole: String?
-    var isActiveOnly: Bool = false {
-        didSet { resetAndReload() }
-    }
+    // MARK: - Paging
 
-    // Paging
     private var currentPage = 0
     private let pageSize = 20
-    private var canLoadMore = true
+    var canLoadMore = true
 
     // MARK: - Init
 
@@ -45,19 +63,14 @@ final class EmployeeListViewModel {
     ) {
         self.repository = repository
         self.networkMonitor = networkMonitor
-
         observeConnectivity()
     }
 
-    // MARK: - Connectivity Reaction
+    // MARK: - Connectivity
 
     private func observeConnectivity() {
 
-        // Initial state
         isOffline = !networkMonitor.isConnected
-
-        // Reactive through Observation system
-        _ = networkMonitor.isConnected
 
         Task {
             while true {
@@ -66,7 +79,6 @@ final class EmployeeListViewModel {
                 let connected = networkMonitor.isConnected
 
                 if isOffline && connected {
-                    print("🌐 Internet restored → syncing")
                     await syncIfNeeded()
                 }
 
@@ -80,6 +92,8 @@ final class EmployeeListViewModel {
     func initialLoad() async {
         await syncIfNeeded()
         await loadInitialPage()
+        await loadFilters()
+        loadCounts()
     }
 
     private func syncIfNeeded() async {
@@ -104,40 +118,106 @@ final class EmployeeListViewModel {
         guard !isLoading, canLoadMore else { return }
 
         isLoading = true
-
         defer { isLoading = false }
 
-        let request = PagingRequest(
-            page: currentPage,
-            pageSize: pageSize
-        )
-
         do {
-            let page = try repository.fetchPage(
-                searchText: searchText,
-                department: selectedDepartment,
-                role: selectedRole,
-                isActiveOnly: isActiveOnly,
-                paging: request
+            let paging = PagingRequest(
+                page: currentPage,
+                pageSize: pageSize
             )
 
-            if page.count < pageSize {
+            let newEmployees = try repository.fetchPage(
+                searchText: searchText.isEmpty ? nil : searchText,
+                department: selectedDepartment,
+                role: selectedRole,
+                isActiveOnly: showActiveOnly,
+                paging: paging
+            )
+
+            employees.append(contentsOf: newEmployees)
+
+            if newEmployees.count < pageSize {
                 canLoadMore = false
+            } else {
+                currentPage += 1
             }
 
-            employees.append(contentsOf: page)
-            currentPage += 1
+            // 🔥 Always refresh counts from DB
+            loadCounts()
 
         } catch {
             errorMessage = error.localizedDescription
         }
     }
 
-    // MARK: - Filters
+    func loadMoreIfNeeded(current employee: Employee) {
+        guard canLoadMore else { return }
+        guard let last = employees.last else { return }
 
-    func resetAndReload() {
+        if last.id == employee.id {
+            Task {
+                await loadNextPage()
+            }
+        }
+    }
+
+    private func resetAndReload() {
         Task {
             await loadInitialPage()
+            loadCounts()
+        }
+    }
+
+    // MARK: - Filters
+
+    func loadFilters() async {
+        do {
+            departments = try repository.fetchDepartments()
+            roles = try repository.fetchRoles()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    // MARK: - DB-Level Counts
+
+    private func loadCounts() {
+
+        do {
+            totalCount = try repository.totalCount(
+                searchText: searchText.isEmpty ? nil : searchText,
+                department: selectedDepartment,
+                role: selectedRole,
+                isActiveOnly: showActiveOnly
+            )
+
+            activeCount = try repository.activeCount(
+                searchText: searchText.isEmpty ? nil : searchText,
+                department: selectedDepartment,
+                role: selectedRole
+            )
+
+            inactiveCount = try repository.inactiveCount(
+                searchText: searchText.isEmpty ? nil : searchText,
+                department: selectedDepartment,
+                role: selectedRole
+            )
+
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    // MARK: - Manual Refresh
+
+    func refresh() async {
+        do {
+            try await repository.fetchAndSync(force: true)
+            await loadInitialPage()
+            await loadFilters()
+            loadCounts()
+        } catch {
+            errorMessage = error.localizedDescription
         }
     }
 }

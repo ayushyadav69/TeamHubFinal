@@ -117,6 +117,42 @@ final class DefaultEmployeeRepository: EmployeeRepository {
         return try context.fetchCount(descriptor)
     }
 
+    func activeCount(
+        searchText: String?,
+        department: String?,
+        role: String?
+    ) throws -> Int {
+
+        let descriptor = FetchDescriptor<EmployeeEntity>(
+            predicate: #Predicate<EmployeeEntity> { entity in
+                (searchText == nil || entity.name.localizedStandardContains(searchText!)) &&
+                (department == nil || entity.department == department!) &&
+                (role == nil || entity.role == role!) &&
+                entity.isActive == true
+            }
+        )
+
+        return try context.fetchCount(descriptor)
+    }
+
+    func inactiveCount(
+        searchText: String?,
+        department: String?,
+        role: String?
+    ) throws -> Int {
+
+        let descriptor = FetchDescriptor<EmployeeEntity>(
+            predicate: #Predicate<EmployeeEntity> { entity in
+                (searchText == nil || entity.name.localizedStandardContains(searchText!)) &&
+                (department == nil || entity.department == department!) &&
+                (role == nil || entity.role == role!) &&
+                entity.isActive == false
+            }
+        )
+
+        return try context.fetchCount(descriptor)
+    }
+
     // MARK: - Update / Delete
 
     func update(_ employee: Employee) throws {
@@ -218,4 +254,33 @@ final class DefaultEmployeeRepository: EmployeeRepository {
         entity.country = employee.country
         entity.joiningDate = employee.joiningDate
     }
+    
+    // MARK: - Dynamic Filter Metadata
+
+    func fetchDepartments() throws -> [String] {
+
+        let descriptor = FetchDescriptor<EmployeeEntity>(
+            sortBy: [SortDescriptor(\.department)]
+        )
+
+        let entities = try context.fetch(descriptor)
+
+        let departments = Set(entities.map { $0.department })
+
+        return Array(departments).sorted()
+    }
+
+    func fetchRoles() throws -> [String] {
+
+        let descriptor = FetchDescriptor<EmployeeEntity>(
+            sortBy: [SortDescriptor(\.role)]
+        )
+
+        let entities = try context.fetch(descriptor)
+
+        let roles = Set(entities.map { $0.role })
+
+        return Array(roles).sorted()
+    }
+
 }

@@ -26,6 +26,21 @@ protocol EmployeeRepository {
         isActiveOnly: Bool
     ) throws -> Int
 
+    func activeCount(
+        searchText: String?,
+        department: String?,
+        role: String?
+    ) throws -> Int
+
+    func inactiveCount(
+        searchText: String?,
+        department: String?,
+        role: String?
+    ) throws -> Int
+
+
     func update(_ employee: Employee) throws
     func delete(_ employee: Employee) throws
+    func fetchDepartments() throws -> [String]
+    func fetchRoles() throws -> [String]
 }
