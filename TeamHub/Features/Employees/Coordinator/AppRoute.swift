@@ -8,5 +8,5 @@
 import Foundation
 
 enum AppRoute: Hashable {
-    case employeeDetail(id: String)
+    case employeeDetail(Employee)
 }

@@ -20,3 +20,12 @@ struct Employee: Identifiable, Equatable, Hashable {
     let country: String
     let joiningDate: Date
 }
+
+//enum EmployeeStatus: String, Hashable, CaseIterable {
+//    case active
+//    case inactive
+//
+//    init(isActive: Bool) {
+//        self = isActive ? .active : .inactive
+//    }
+//}

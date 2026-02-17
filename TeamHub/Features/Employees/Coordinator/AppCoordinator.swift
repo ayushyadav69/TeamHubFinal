@@ -11,15 +11,15 @@ import Observation
 @Observable
 final class AppCoordinator {
 
-    var path: [AppRoute] = []
+    var path = NavigationPath()
 
-    func goToDetail(employeeID: String) {
-        path.append(.employeeDetail(id: employeeID))
-    }
-
-    func pop() {
-        path.removeLast()
-    }
+//    func goToDetail(employee: Employee) {
+//        path.append(.employeeDetail(employee))
+//    }
+//
+//    func pop() {
+//        path.removeLast()
+//    }
 }
 
 

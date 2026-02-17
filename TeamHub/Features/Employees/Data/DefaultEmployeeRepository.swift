@@ -64,94 +64,153 @@ final class DefaultEmployeeRepository: EmployeeRepository {
 
     func fetchPage(
         searchText: String?,
-        department: String?,
-        role: String?,
-        isActiveOnly: Bool,
+        departments: Set<String>,
+        roles: Set<String>,
+        statuses: Set<EmployeeStatus>,
         paging: PagingRequest
     ) throws -> [Employee] {
 
         let search = searchText?.trimmingCharacters(in: .whitespacesAndNewlines)
-        let dept = department
-        let r = role
-        let activeOnly = isActiveOnly
+        let deptArray = Array(departments)
+        let roleArray = Array(roles)
 
-        var descriptor = FetchDescriptor<EmployeeEntity>(
+        let wantsActive = statuses.contains(.active)
+        let wantsInactive = statuses.contains(.inactive)
+        let filterStatus = !statuses.isEmpty
+
+        let descriptor = FetchDescriptor<EmployeeEntity>(
             predicate: #Predicate<EmployeeEntity> { entity in
-                (search == nil || entity.name.localizedStandardContains(search!)) &&
-                (dept == nil || entity.department == dept!) &&
-                (r == nil || entity.role == r!) &&
-                (!activeOnly || entity.isActive == true)
+
+                // SEARCH
+                (search == nil || entity.name.localizedStandardContains(search!))
+
+                // DEPARTMENT (multi select)
+                &&
+                (deptArray.isEmpty || deptArray.contains(entity.department))
+
+                // ROLE (multi select)
+                &&
+                (roleArray.isEmpty || roleArray.contains(entity.role))
+
+                // STATUS
+                &&
+                (
+                    !filterStatus
+                    ||
+                    (wantsActive && entity.isActive)
+                    ||
+                    (wantsInactive && !entity.isActive)
+                )
             },
-            sortBy: [SortDescriptor(\.name)]
+            sortBy: [SortDescriptor(\EmployeeEntity.name)]
         )
 
-        descriptor.fetchLimit = paging.pageSize
-        descriptor.fetchOffset = paging.offset
+        var result = try context.fetch(descriptor)
 
-        let entities = try context.fetch(descriptor)
+        // Pagination manually (SwiftData offset is unstable in predicates)
+        let start = paging.page * paging.pageSize
+        let end = min(start + paging.pageSize, result.count)
 
-        return entities.map { $0.toDomain() }
+        if start < end {
+            result = Array(result[start..<end])
+        } else {
+            result = []
+        }
+
+        return result.map { (entity: EmployeeEntity) in
+            entity.toDomain()
+        }
     }
+
+
+
 
     func totalCount(
         searchText: String?,
-        department: String?,
-        role: String?,
-        isActiveOnly: Bool
+        departments: Set<String>,
+        roles: Set<String>,
+        statuses: Set<EmployeeStatus>
     ) throws -> Int {
 
-        let search = searchText
-        let dept = department
-        let r = role
-        let activeOnly = isActiveOnly
+        let search = searchText?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let deptArray = Array(departments)
+        let roleArray = Array(roles)
+
+        let wantsActive = statuses.contains(.active)
+        let wantsInactive = statuses.contains(.inactive)
+        let filterStatus = !statuses.isEmpty
 
         let descriptor = FetchDescriptor<EmployeeEntity>(
             predicate: #Predicate<EmployeeEntity> { entity in
-                (search == nil || entity.name.localizedStandardContains(search!)) &&
-                (dept == nil || entity.department == dept!) &&
-                (r == nil || entity.role == r!) &&
-                (!activeOnly || entity.isActive == true)
+                (search == nil || entity.name.localizedStandardContains(search!))
+                &&
+                (deptArray.isEmpty || deptArray.contains(entity.department))
+                &&
+                (roleArray.isEmpty || roleArray.contains(entity.role))
+                &&
+                (
+                    !filterStatus
+                    ||
+                    (wantsActive && entity.isActive)
+                    ||
+                    (wantsInactive && !entity.isActive)
+                )
             }
         )
 
         return try context.fetchCount(descriptor)
     }
+
+
+
 
     func activeCount(
         searchText: String?,
-        department: String?,
-        role: String?
+        departments: Set<String>,
+        roles: Set<String>
     ) throws -> Int {
+
+        let search = searchText?.trimmingCharacters(in: .whitespacesAndNewlines)
 
         let descriptor = FetchDescriptor<EmployeeEntity>(
             predicate: #Predicate<EmployeeEntity> { entity in
-                (searchText == nil || entity.name.localizedStandardContains(searchText!)) &&
-                (department == nil || entity.department == department!) &&
-                (role == nil || entity.role == role!) &&
-                entity.isActive == true
+                entity.isActive
+                &&
+                (search == nil || entity.name.localizedStandardContains(search!))
+                &&
+                (departments.isEmpty || departments.contains(entity.department))
+                &&
+                (roles.isEmpty || roles.contains(entity.role))
             }
         )
 
         return try context.fetchCount(descriptor)
     }
+
 
     func inactiveCount(
         searchText: String?,
-        department: String?,
-        role: String?
+        departments: Set<String>,
+        roles: Set<String>
     ) throws -> Int {
+
+        let search = searchText?.trimmingCharacters(in: .whitespacesAndNewlines)
 
         let descriptor = FetchDescriptor<EmployeeEntity>(
             predicate: #Predicate<EmployeeEntity> { entity in
-                (searchText == nil || entity.name.localizedStandardContains(searchText!)) &&
-                (department == nil || entity.department == department!) &&
-                (role == nil || entity.role == role!) &&
-                entity.isActive == false
+                !entity.isActive
+                &&
+                (search == nil || entity.name.localizedStandardContains(search!))
+                &&
+                (departments.isEmpty || departments.contains(entity.department))
+                &&
+                (roles.isEmpty || roles.contains(entity.role))
             }
         )
 
         return try context.fetchCount(descriptor)
     }
+
 
     // MARK: - Update / Delete
 

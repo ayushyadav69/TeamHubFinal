@@ -10,31 +10,24 @@ import SwiftData
 
 @main
 struct TeamHubApp: App {
-
+    
     @State private var container = AppDIContainer()
     @State private var coordinator = AppCoordinator()
-
+    
     var body: some Scene {
         WindowGroup {
-
+            
             NavigationStack(path: $coordinator.path) {
-
+                
                 EmployeeListView()
-
                     .navigationDestination(for: AppRoute.self) { route in
+                        
                         switch route {
-
-                        case .employeeDetail(let id):
-                            EmployeeDetailView(
-                                viewModel: EmployeeDetailViewModel(
-                                    employeeID: id,
-                                    repository: container.employeeRepository
-                                )
-                            )
+                            
+                        case .employeeDetail(let employee):
+                            DetailView(employee: employee)
                         }
                     }
-
-
             }
             // 🔴 INJECT HERE — ON STACK ROOT
             .environment(container.employeeListViewModel)

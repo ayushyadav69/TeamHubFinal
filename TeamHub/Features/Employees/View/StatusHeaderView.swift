@@ -41,5 +41,6 @@ struct StatusHeaderView: View {
         .padding(.horizontal)
         .padding(.vertical, 8)
         .background(Color(.systemBackground))
+        
     }
 }

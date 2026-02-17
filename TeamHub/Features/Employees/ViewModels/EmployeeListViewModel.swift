@@ -25,15 +25,15 @@ final class EmployeeListViewModel {
         didSet { resetAndReload() }
     }
 
-    var selectedDepartment: String? {
+    var selectedDepartments: Set<String> = [] {
         didSet { resetAndReload() }
     }
 
-    var selectedRole: String? {
+    var selectedRoles: Set<String> = [] {
         didSet { resetAndReload() }
     }
 
-    var showActiveOnly: Bool = false {
+    var selectedStatuses: Set<EmployeeStatus> = [] {
         didSet { resetAndReload() }
     }
 
@@ -128,11 +128,12 @@ final class EmployeeListViewModel {
 
             let newEmployees = try repository.fetchPage(
                 searchText: searchText.isEmpty ? nil : searchText,
-                department: selectedDepartment,
-                role: selectedRole,
-                isActiveOnly: showActiveOnly,
+                departments: selectedDepartments,
+                roles: selectedRoles,
+                statuses: selectedStatuses,
                 paging: paging
             )
+
 
             employees.append(contentsOf: newEmployees)
 
@@ -186,22 +187,23 @@ final class EmployeeListViewModel {
         do {
             totalCount = try repository.totalCount(
                 searchText: searchText.isEmpty ? nil : searchText,
-                department: selectedDepartment,
-                role: selectedRole,
-                isActiveOnly: showActiveOnly
+                departments: selectedDepartments,
+                roles: selectedRoles,
+                statuses: selectedStatuses
             )
 
             activeCount = try repository.activeCount(
                 searchText: searchText.isEmpty ? nil : searchText,
-                department: selectedDepartment,
-                role: selectedRole
+                departments: selectedDepartments,
+                roles: selectedRoles
             )
 
             inactiveCount = try repository.inactiveCount(
                 searchText: searchText.isEmpty ? nil : searchText,
-                department: selectedDepartment,
-                role: selectedRole
+                departments: selectedDepartments,
+                roles: selectedRoles
             )
+
 
         } catch {
             errorMessage = error.localizedDescription

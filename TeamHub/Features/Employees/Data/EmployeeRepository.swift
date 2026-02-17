@@ -13,34 +13,33 @@ protocol EmployeeRepository {
     
     func employee(by id: String) throws -> Employee?
 
-
+    // 🔥 MULTI FILTER
     func fetchPage(
         searchText: String?,
-        department: String?,
-        role: String?,
-        isActiveOnly: Bool,
+        departments: Set<String>,
+        roles: Set<String>,
+        statuses: Set<EmployeeStatus>,
         paging: PagingRequest
     ) throws -> [Employee]
 
     func totalCount(
         searchText: String?,
-        department: String?,
-        role: String?,
-        isActiveOnly: Bool
+        departments: Set<String>,
+        roles: Set<String>,
+        statuses: Set<EmployeeStatus>
     ) throws -> Int
 
     func activeCount(
         searchText: String?,
-        department: String?,
-        role: String?
+        departments: Set<String>,
+        roles: Set<String>
     ) throws -> Int
 
     func inactiveCount(
         searchText: String?,
-        department: String?,
-        role: String?
+        departments: Set<String>,
+        roles: Set<String>
     ) throws -> Int
-
 
     func update(_ employee: Employee) throws
     func delete(_ employee: Employee) throws

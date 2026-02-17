@@ -30,10 +30,7 @@ final class AppDIContainer {
         let networkService = URLSessionNetworkService()
         let decoder = JSONResponseDecoder()
 
-        apiClient = APIClient(
-            networkService: networkService,
-            decoder: decoder
-        )
+        apiClient = APIClient(networkService: networkService, decoder: decoder)
 
         dateParser = APIDateParser()
         syncPolicy = DefaultSyncPolicy()
@@ -46,10 +43,7 @@ final class AppDIContainer {
             networkMonitor: networkMonitor
         )
 
-        employeeListViewModel = EmployeeListViewModel(
-            repository: employeeRepository,
-            networkMonitor: networkMonitor
-        )
+        employeeListViewModel = EmployeeListViewModel(repository: employeeRepository, networkMonitor: networkMonitor)
 
         BackgroundSyncManager.shared.register(repository: employeeRepository)
         BackgroundSyncManager.shared.schedule()
