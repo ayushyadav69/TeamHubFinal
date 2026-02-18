@@ -46,6 +46,7 @@ final class EmployeeListViewModel {
     var roles: [String] = []
 
     var isLoading = false
+    var isSyncing = false
     var errorMessage: String?
     var isOffline = false
 
@@ -70,19 +71,15 @@ final class EmployeeListViewModel {
 
     private func observeConnectivity() {
 
-        isOffline = !networkMonitor.isConnected
+        Task { @MainActor in
+            for await connected in networkMonitor.connectionStream {
 
-        Task {
-            while true {
-                try? await Task.sleep(nanoseconds: 500_000_000)
+                let wasOffline = isOffline
+                isOffline = !connected
 
-                let connected = networkMonitor.isConnected
-
-                if isOffline && connected {
+                if wasOffline && connected {
                     await syncIfNeeded()
                 }
-
-                isOffline = !connected
             }
         }
     }
@@ -97,6 +94,9 @@ final class EmployeeListViewModel {
     }
 
     private func syncIfNeeded() async {
+        isSyncing = true
+        defer { isSyncing = false }
+
         do {
             try await repository.fetchAndSync(force: false)
         } catch {
@@ -133,7 +133,6 @@ final class EmployeeListViewModel {
                 statuses: selectedStatuses,
                 paging: paging
             )
-
 
             employees.append(contentsOf: newEmployees)
 
@@ -204,7 +203,6 @@ final class EmployeeListViewModel {
                 roles: selectedRoles
             )
 
-
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -213,11 +211,12 @@ final class EmployeeListViewModel {
     // MARK: - Manual Refresh
 
     func refresh() async {
+        isSyncing = true
+        defer { isSyncing = false }
+
         do {
             try await repository.fetchAndSync(force: true)
             await loadInitialPage()
-            await loadFilters()
-            loadCounts()
         } catch {
             errorMessage = error.localizedDescription
         }

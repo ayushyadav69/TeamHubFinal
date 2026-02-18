@@ -14,24 +14,40 @@ struct EmployeeListView: View {
 
     @State private var showFilters = false
     @State private var isRefreshing = false
+    @State private var scrollPos: String?
+
 
     var body: some View {
 
         @Bindable var vm = viewModel
-
+        
         ScrollView {
-            StatusHeaderView(isOffline: viewModel.isOffline, isSyncing: viewModel.isLoading)
-            LazyVStack {
-                ForEach(viewModel.employees) { employee in
-                    EmployeeRowView(employee: employee)
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            coordinator.path.append(AppRoute.employeeDetail(employee))
-                        }
-                        .onAppear {
-                            viewModel.loadMoreIfNeeded(current: employee)
-                        }
-                    Divider()
+            LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
+                Section {
+                    
+                    ForEach(viewModel.employees) { employee in
+                        
+                        EmployeeRowView(employee: employee)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                coordinator.path.append(AppRoute.employeeDetail(employee))
+                            }
+                            .onAppear {
+                                viewModel.loadMoreIfNeeded(current: employee)
+                            }
+                        
+                        Divider()
+                        
+                    }
+                } header: {
+                    VStack(spacing: 0) {
+                        SearchBar(text: $vm.searchText)
+                        
+                        StatusHeaderView()
+                        
+                        EmployeeStatusHeaderView()
+                    }
+                    .containerRelativeFrame(.horizontal)
                 }
                 
                 if viewModel.isLoading && viewModel.canLoadMore {
@@ -45,7 +61,7 @@ struct EmployeeListView: View {
             .padding(.horizontal)
         }
         .navigationTitle("Employees")
-        .searchable(text: $vm.searchText, placement: .navigationBarDrawer(displayMode: .always))
+        .navigationBarTitleDisplayMode(.large)
         .refreshable {
             isRefreshing = true
             await viewModel.refresh()
@@ -53,24 +69,28 @@ struct EmployeeListView: View {
         }
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Button { showFilters.toggle() } label: {
+                Button {
+                    showFilters.toggle()
+                } label: {
                     Image(systemName: "line.3.horizontal.decrease.circle")
                 }
-                .popover(isPresented: $showFilters,
-                         attachmentAnchor: .rect(.bounds),
-                         arrowEdge: .top) {
-                    GenericFilterPanel(sections: filterSections, preselected: currentSelections, onApply: applyFilters, onReset: resetFilters)
+                .popover(isPresented: $showFilters, attachmentAnchor: .rect(.bounds), arrowEdge: .top) {
+                    GenericFilterPanel(
+                        sections: filterSections,
+                        preselected: currentSelections,
+                        onApply: applyFilters,
+                        onReset: resetFilters
+                    )
                     .frame(width: 300)
                     .presentationCompactAdaptation(.popover)
                 }
             }
-            
         }
-        
-//        .toolbarBackground(.visible, for: .navigationBar)
         .toolbarBackground(isRefreshing ? .visible : .automatic, for: .navigationBar)
         .toolbarBackground(Color(.white), for: .navigationBar)
-        .task { await vm.initialLoad() }
+        .task {
+            await vm.initialLoad()
+        }
     }
 }
 
@@ -94,7 +114,7 @@ private extension EmployeeListView {
                 key: "Status",
                 title: "Status",
                 options: ["Active", "Inactive"],
-                allowsMultiple: false   // ⭐ tri-state behavior
+                allowsMultiple: false
             )
         ]
     }
@@ -109,7 +129,6 @@ private extension EmployeeListView {
             })
         ]
     }
-
 
     func applyFilters(_ dict: [String: Set<String>]) {
 

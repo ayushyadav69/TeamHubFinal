@@ -5,39 +5,38 @@
 //  Created by Ayush yadav on 12/02/26.
 //
 
-import Foundation
 import Network
-import Observation
 
-@MainActor
-@Observable
 final class NetworkMonitor {
 
     static let shared = NetworkMonitor()
 
     private let monitor = NWPathMonitor()
-    private let queue = DispatchQueue(label: "NetworkMonitorQueue")
+    private let queue = DispatchQueue(label: "NetworkMonitor")
 
-    private(set) var isConnected: Bool = false
-    private(set) var isExpensive: Bool = false
+    private var continuation: AsyncStream<Bool>.Continuation?
 
-    private init() {}
+    private(set) var isConnected: Bool = true   // snapshot
+
+    lazy var connectionStream: AsyncStream<Bool> = {
+        AsyncStream { continuation in
+            self.continuation = continuation
+            continuation.yield(self.isConnected) // immediate value
+        }
+    }()
 
     func start() {
-
         monitor.pathUpdateHandler = { [weak self] path in
             guard let self else { return }
 
+            let connected = path.status == .satisfied
+
             Task { @MainActor in
-                self.isConnected = path.status == .satisfied
-                self.isExpensive = path.isExpensive
+                self.isConnected = connected
+                self.continuation?.yield(connected)
             }
         }
 
         monitor.start(queue: queue)
-    }
-
-    func stop() {
-        monitor.cancel()
     }
 }

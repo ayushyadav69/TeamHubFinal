@@ -8,24 +8,23 @@
 import SwiftUI
 
 struct StatusHeaderView: View {
-
-    let isOffline: Bool
-    let isSyncing: Bool
+    
+    @Environment(EmployeeListViewModel.self) private var viewModel
 
     var body: some View {
 
         HStack(spacing: 12) {
 
             Circle()
-                .fill(isOffline ? .red : .green)
+                .fill(viewModel.isOffline ? .red : .green)
                 .frame(width: 8, height: 8)
 
-            if isOffline {
+            if viewModel.isOffline {
                 Text("Offline mode")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
-            else if isSyncing {
+            else if viewModel.isSyncing  {
                 Text("Syncing...")
                     .font(.caption)
                     .foregroundStyle(.secondary)
