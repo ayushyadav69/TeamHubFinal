@@ -15,8 +15,15 @@ final class EmployeeEntity {
     var id: String
 
     var name: String
-    var role: String
-    var department: String
+    
+    //old
+    var roleName: String
+    var departmentName: String
+    
+    // new
+    var department: DepartmentEntity?
+    var role: RoleEntity?
+    
     var isActive: Bool
     var imageURL: String
     var email: String
@@ -24,6 +31,7 @@ final class EmployeeEntity {
     var country: String
     var joiningDate: Date
 
+    
     init(
         id: String,
         name: String,
@@ -38,8 +46,8 @@ final class EmployeeEntity {
     ) {
         self.id = id
         self.name = name
-        self.role = role
-        self.department = department
+        self.roleName = role
+        self.departmentName = department
         self.isActive = isActive
         self.imageURL = imageURL
         self.email = email
@@ -70,8 +78,8 @@ extension EmployeeEntity {
         Employee(
             id: id,
             name: name,
-            role: role,
-            department: department,
+            role: role?.name ?? roleName,
+            department: department?.name ?? departmentName,
             isActive: isActive,
             imageURL: URL(string: imageURL),
             email: email,

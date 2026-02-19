@@ -86,11 +86,11 @@ final class DefaultEmployeeRepository: EmployeeRepository {
 
                 // DEPARTMENT (multi select)
                 &&
-                (deptArray.isEmpty || deptArray.contains(entity.department))
+                (deptArray.isEmpty || deptArray.contains(entity.departmentName))
 
                 // ROLE (multi select)
                 &&
-                (roleArray.isEmpty || roleArray.contains(entity.role))
+                (roleArray.isEmpty || roleArray.contains(entity.roleName))
 
                 // STATUS
                 &&
@@ -144,9 +144,9 @@ final class DefaultEmployeeRepository: EmployeeRepository {
             predicate: #Predicate<EmployeeEntity> { entity in
                 (search == nil || entity.name.localizedStandardContains(search!))
                 &&
-                (deptArray.isEmpty || deptArray.contains(entity.department))
+                (deptArray.isEmpty || deptArray.contains(entity.departmentName))
                 &&
-                (roleArray.isEmpty || roleArray.contains(entity.role))
+                (roleArray.isEmpty || roleArray.contains(entity.roleName))
                 &&
                 (
                     !filterStatus
@@ -178,9 +178,9 @@ final class DefaultEmployeeRepository: EmployeeRepository {
                 &&
                 (search == nil || entity.name.localizedStandardContains(search!))
                 &&
-                (departments.isEmpty || departments.contains(entity.department))
+                (departments.isEmpty || departments.contains(entity.departmentName))
                 &&
-                (roles.isEmpty || roles.contains(entity.role))
+                (roles.isEmpty || roles.contains(entity.roleName))
             }
         )
 
@@ -202,9 +202,9 @@ final class DefaultEmployeeRepository: EmployeeRepository {
                 &&
                 (search == nil || entity.name.localizedStandardContains(search!))
                 &&
-                (departments.isEmpty || departments.contains(entity.department))
+                (departments.isEmpty || departments.contains(entity.departmentName))
                 &&
-                (roles.isEmpty || roles.contains(entity.role))
+                (roles.isEmpty || roles.contains(entity.roleName))
             }
         )
 
@@ -214,38 +214,38 @@ final class DefaultEmployeeRepository: EmployeeRepository {
 
     // MARK: - Update / Delete
 
-    func update(_ employee: Employee) throws {
+//    func update(_ employee: Employee) throws {
+//
+//        let id = employee.id
+//
+//        let descriptor = FetchDescriptor<EmployeeEntity>(
+//            predicate: #Predicate<EmployeeEntity> { entity in
+//                entity.id == id
+//            }
+//        )
+//
+//        guard let entity = try context.fetch(descriptor).first else { return }
+//
+//        applyChanges(from: employee, to: entity)
+//
+//        try context.save()
+//    }
 
-        let id = employee.id
-
-        let descriptor = FetchDescriptor<EmployeeEntity>(
-            predicate: #Predicate<EmployeeEntity> { entity in
-                entity.id == id
-            }
-        )
-
-        guard let entity = try context.fetch(descriptor).first else { return }
-
-        applyChanges(from: employee, to: entity)
-
-        try context.save()
-    }
-
-    func delete(_ employee: Employee) throws {
-
-        let id = employee.id
-
-        let descriptor = FetchDescriptor<EmployeeEntity>(
-            predicate: #Predicate<EmployeeEntity> { entity in
-                entity.id == id
-            }
-        )
-
-        guard let entity = try context.fetch(descriptor).first else { return }
-
-        context.delete(entity)
-        try context.save()
-    }
+//    func delete(_ employee: Employee) throws {
+//
+//        let id = employee.id
+//
+//        let descriptor = FetchDescriptor<EmployeeEntity>(
+//            predicate: #Predicate<EmployeeEntity> { entity in
+//                entity.id == id
+//            }
+//        )
+//
+//        guard let entity = try context.fetch(descriptor).first else { return }
+//
+//        context.delete(entity)
+//        try context.save()
+//    }
 
     // MARK: - Sync Logic
 
@@ -264,8 +264,13 @@ final class DefaultEmployeeRepository: EmployeeRepository {
 
             if let existing = localDict[employee.id] {
 
+                // ALWAYS ensure relations exist
+                existing.department = try department(named: employee.department)
+                existing.role = try role(named: employee.role)
+
+                // Update fields only if changed
                 if hasChanges(existing, comparedTo: employee) {
-                    applyChanges(from: employee, to: existing)
+                    try applyChanges(from: employee, to: existing)
                 }
 
                 localDict.removeValue(forKey: employee.id)
@@ -273,8 +278,11 @@ final class DefaultEmployeeRepository: EmployeeRepository {
             } else {
 
                 let newEntity = EmployeeEntity.fromDomain(employee)
+                newEntity.department = try department(named: employee.department)
+                newEntity.role = try role(named: employee.role)
                 context.insert(newEntity)
             }
+
         }
 
         for remaining in localDict.values {
@@ -291,8 +299,8 @@ final class DefaultEmployeeRepository: EmployeeRepository {
     private func hasChanges(_ entity: EmployeeEntity, comparedTo employee: Employee) -> Bool {
 
         entity.name != employee.name ||
-        entity.role != employee.role ||
-        entity.department != employee.department ||
+        entity.roleName != employee.role ||
+        entity.departmentName != employee.department ||
         entity.isActive != employee.isActive ||
         entity.imageURL != employee.imageURL?.absoluteString ||
         entity.email != employee.email ||
@@ -301,54 +309,83 @@ final class DefaultEmployeeRepository: EmployeeRepository {
         entity.joiningDate != employee.joiningDate
     }
 
-    private func applyChanges(from employee: Employee, to entity: EmployeeEntity) {
+    private func applyChanges(from employee: Employee, to entity: EmployeeEntity) throws {
 
         entity.name = employee.name
-        entity.role = employee.role
-        entity.department = employee.department
+        entity.roleName = employee.role
+        entity.departmentName = employee.department
         entity.isActive = employee.isActive
         entity.imageURL = employee.imageURL?.absoluteString ?? ""
         entity.email = employee.email
         entity.city = employee.city
         entity.country = employee.country
         entity.joiningDate = employee.joiningDate
+
+        // IMPORTANT: ensure metadata tables always populated
+        entity.department = try department(named: employee.department)
+        entity.role = try role(named: employee.role)
     }
+
     
     // MARK: - Dynamic Filter Metadata
 
     func fetchDepartments() throws -> [String] {
 
-        let descriptor = FetchDescriptor<EmployeeEntity>(
-            sortBy: [SortDescriptor(\.department)]
+        let descriptor = FetchDescriptor<DepartmentEntity>(
+            sortBy: [SortDescriptor(\.name)]
         )
 
-        let entities = try context.fetch(descriptor)
+        return try context.fetch(descriptor).map(\.name)
 
-        let departments = Set(entities.map { $0.department })
-
-        return Array(departments).sorted()
     }
 
     func fetchRoles() throws -> [String] {
 
-        let descriptor = FetchDescriptor<EmployeeEntity>(
-            sortBy: [SortDescriptor(\.role)]
+        let descriptor = FetchDescriptor<RoleEntity>(
+            sortBy: [SortDescriptor(\.name)]
         )
 
-        let entities = try context.fetch(descriptor)
+        return try context.fetch(descriptor).map(\.name)
 
-        let roles = Set(entities.map { $0.role })
-
-        return Array(roles).sorted()
     }
     
-    func employee(by id: String) throws -> Employee? {
+//    func employee(by id: String) throws -> Employee? {
+//
+//        let descriptor = FetchDescriptor<EmployeeEntity>(
+//            predicate: #Predicate<EmployeeEntity> { $0.id == id }
+//        )
+//
+//        return try context.fetch(descriptor).first?.toDomain()
+//    }
 
-        let descriptor = FetchDescriptor<EmployeeEntity>(
-            predicate: #Predicate<EmployeeEntity> { $0.id == id }
+    private func department(named name: String) throws -> DepartmentEntity {
+
+        let descriptor = FetchDescriptor<DepartmentEntity>(
+            predicate: #Predicate { $0.name == name }
         )
 
-        return try context.fetch(descriptor).first?.toDomain()
+        if let existing = try context.fetch(descriptor).first {
+            return existing
+        }
+
+        let new = DepartmentEntity(name: name)
+        context.insert(new)
+        return new
+    }
+
+    private func role(named name: String) throws -> RoleEntity {
+
+        let descriptor = FetchDescriptor<RoleEntity>(
+            predicate: #Predicate { $0.name == name }
+        )
+
+        if let existing = try context.fetch(descriptor).first {
+            return existing
+        }
+
+        let new = RoleEntity(name: name)
+        context.insert(new)
+        return new
     }
 
 
