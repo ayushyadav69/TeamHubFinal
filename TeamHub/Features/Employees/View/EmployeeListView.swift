@@ -73,6 +73,10 @@ struct EmployeeListView: View {
                         Spacer()
                     }
                 }
+                
+                if !viewModel.canLoadMore && !viewModel.employees.isEmpty {
+                    EndOfListBanner()
+                }
             }
             .padding(.horizontal)
         }

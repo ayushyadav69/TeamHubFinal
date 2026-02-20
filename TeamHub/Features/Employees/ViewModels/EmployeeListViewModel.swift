@@ -95,6 +95,7 @@ final class EmployeeListViewModel {
     
     func initialLoad() async {
         
+        if !employees.isEmpty { return }
         // show cached DB immediately
         await loadInitialPage()
         await loadFilters()
