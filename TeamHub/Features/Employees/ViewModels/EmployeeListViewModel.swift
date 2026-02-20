@@ -23,7 +23,10 @@ final class EmployeeListViewModel {
     var hasLoadedFromDB = false
     
     var searchText: String = "" {
-        didSet { resetAndReload() }
+        didSet {
+            if searchText == oldValue { return }
+            resetAndReload()
+        }
     }
     
     var selectedDepartments: Set<String> = [] {

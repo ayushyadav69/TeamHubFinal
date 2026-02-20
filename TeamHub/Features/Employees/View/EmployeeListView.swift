@@ -25,60 +25,41 @@ struct EmployeeListView: View {
 
     var body: some View {
 
-        @Bindable var vm = viewModel
-        
-        ScrollView {
-            LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
-                Section {
-
-                    // 🔥 SHOW SHIMMER ROWS ONLY
-                    if viewModel.employees.isEmpty && viewModel.isSyncing {
-
-                        ForEach(0..<8, id: \.self) { _ in
-                            EmployeeRowSkeleton()
-                            Divider()
+//        @Bindable var vm = viewModel
+        VStack(spacing: 0) {
+            
+            VStack {
+                SearchBar()
+                StatusHeaderView()
+                EmployeeStatusHeaderView()
+            }
+            .fixedSize(horizontal: false, vertical: true)
+            
+            List {
+                ForEach(viewModel.employees) { employee in
+                    EmployeeRowView(employee: employee)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            coordinator.path.append(AppRoute.employeeDetail(employee))
                         }
-
-                    } else {
-
-                        ForEach(viewModel.employees) { employee in
-                            EmployeeRowView(employee: employee)
-                                .contentShape(Rectangle())
-                                .onTapGesture {
-                                    coordinator.path.append(AppRoute.employeeDetail(employee))
-                                }
-                                .onAppear {
-                                    viewModel.loadMoreIfNeeded(current: employee)
-                                }
-
-                            Divider()
+                        .onAppear {
+                            viewModel.loadMoreIfNeeded(current: employee)
                         }
-                    }
-
-                } header: {
-                    VStack(spacing: 0) {
-                        SearchBar(text: $vm.searchText)
-                        
-                        StatusHeaderView()
-                        
-                        EmployeeStatusHeaderView()
-                    }
-                    .containerRelativeFrame(.horizontal)
                 }
-                
                 if viewModel.isLoading && viewModel.canLoadMore {
-                    HStack {
-                        Spacer()
-                        ProgressView()
-                        Spacer()
-                    }
+                    HStack { Spacer(); ProgressView(); Spacer() }
+                        .listRowSeparator(.hidden)
                 }
                 
                 if !viewModel.canLoadMore && !viewModel.employees.isEmpty {
                     EndOfListBanner()
+                        .listRowSeparator(.hidden)
                 }
             }
-            .padding(.horizontal)
+            
+            .listStyle(.plain)
+//            .scrollContentBackground(.hidden)
+            .ignoresSafeArea(.keyboard, edges: .bottom)
         }
         .navigationTitle("Employees")
         .navigationBarTitleDisplayMode(.large)
@@ -113,7 +94,7 @@ struct EmployeeListView: View {
         .toolbarBackground(isRefreshing ? .visible : .automatic, for: .navigationBar)
         .toolbarBackground(Color(.white), for: .navigationBar)
         .task {
-            await vm.initialLoad()
+            await viewModel.initialLoad()
         }
     }
 }

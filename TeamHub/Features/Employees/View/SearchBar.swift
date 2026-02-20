@@ -9,26 +9,26 @@ import SwiftUI
 import Combine
 
 struct SearchBar: View {
-    @Binding var text: String
+    @Environment(EmployeeListViewModel.self) private var viewModel
     @FocusState var focused: Bool
     
     var body: some View {
-        
+        @Bindable var vm = viewModel
         HStack(spacing: 8) {
             
             Image(systemName: "magnifyingglass")
                 .foregroundStyle(.secondary)
             
-            TextField("Search employees", text: $text)
+            TextField("Search employees", text: $vm.searchText)
                 .textFieldStyle(.plain)
                 .focused($focused)
                 .onReceive(GlobalKeyboardDismiss.shared) { _ in
                         focused = false
                     }
             
-            if !text.isEmpty {
+            if !vm.searchText.isEmpty {
                 Button {
-                    text = ""
+                    vm.searchText = ""
                 } label: {
                     Image(systemName: "xmark.circle.fill")
                         .foregroundStyle(.secondary)
