@@ -10,7 +10,7 @@ import Combine
 
 struct SearchBar: View {
     @Binding var text: String
-    @FocusState.Binding var focused: Bool
+    @FocusState var focused: Bool
     
     var body: some View {
         

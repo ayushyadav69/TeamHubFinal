@@ -15,8 +15,13 @@ struct EmployeeListView: View {
     @State private var showFilters = false
     @State private var isRefreshing = false
 //    @State private var scrollPos: String?
-    @FocusState private var searchFocused: Bool
+//    @FocusState private var searchFocused: Bool
 
+    private var hasActiveFilters: Bool {
+        !viewModel.selectedDepartments.isEmpty ||
+        !viewModel.selectedRoles.isEmpty ||
+        !viewModel.selectedStatuses.isEmpty
+    }
 
     var body: some View {
 
@@ -52,7 +57,7 @@ struct EmployeeListView: View {
 
                 } header: {
                     VStack(spacing: 0) {
-                        SearchBar(text: $vm.searchText, focused: $searchFocused)
+                        SearchBar(text: $vm.searchText)
                         
                         StatusHeaderView()
                         
@@ -83,7 +88,11 @@ struct EmployeeListView: View {
                 Button {
                     showFilters.toggle()
                 } label: {
-                    Image(systemName: "line.3.horizontal.decrease.circle")
+                    Image(systemName: hasActiveFilters
+                          ? "line.3.horizontal.decrease.circle.fill"
+                          : "line.3.horizontal.decrease.circle")
+//                    .symbolRenderingMode(.hierarchical)
+//                    .foregroundStyle(hasActiveFilters ? .blue : .primary)
                 }
                 .popover(isPresented: $showFilters, attachmentAnchor: .rect(.bounds), arrowEdge: .top) {
                     GenericFilterPanel(

@@ -43,6 +43,7 @@ struct GenericFilterPanel: View {
                 FilterFieldRow(
                     title: section.title,
                     value: displayValue(for: section),
+                    isActive: !(selections[section.key] ?? []).isEmpty,
                     action: { openedSection = section }
                 )
             }

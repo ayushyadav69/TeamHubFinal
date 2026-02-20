@@ -35,7 +35,9 @@ struct FieldOptionsPopover: View {
                             Image(systemName: "checkmark")
                         }
                     }
+                    .contentShape(Rectangle())
                 }
+                
                 .buttonStyle(.plain)
                 .padding(.vertical, 4)
             }
