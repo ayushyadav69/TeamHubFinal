@@ -9,7 +9,7 @@ import Foundation
 
 protocol EmployeeRepository {
 
-    func fetchAndSync(force: Bool) async throws
+    func fetchAndSync(force: Bool) async throws -> Bool
     
 //    func employee(by id: String) throws -> Employee?
 

@@ -24,21 +24,31 @@ struct EmployeeListView: View {
         ScrollView {
             LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
                 Section {
-                    
-                    ForEach(viewModel.employees) { employee in
-                        
-                        EmployeeRowView(employee: employee)
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                coordinator.path.append(AppRoute.employeeDetail(employee))
-                            }
-                            .onAppear {
-                                viewModel.loadMoreIfNeeded(current: employee)
-                            }
-                        
-                        Divider()
-                        
+
+                    // 🔥 SHOW SHIMMER ROWS ONLY
+                    if viewModel.employees.isEmpty && viewModel.isSyncing {
+
+                        ForEach(0..<8, id: \.self) { _ in
+                            EmployeeRowSkeleton()
+                            Divider()
+                        }
+
+                    } else {
+
+                        ForEach(viewModel.employees) { employee in
+                            EmployeeRowView(employee: employee)
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    coordinator.path.append(AppRoute.employeeDetail(employee))
+                                }
+                                .onAppear {
+                                    viewModel.loadMoreIfNeeded(current: employee)
+                                }
+
+                            Divider()
+                        }
                     }
+
                 } header: {
                     VStack(spacing: 0) {
                         SearchBar(text: $vm.searchText)

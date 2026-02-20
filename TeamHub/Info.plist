@@ -4,7 +4,7 @@
 <dict>
 	<key>BGTaskSchedulerPermittedIdentifiers</key>
 	<array>
-		<string>com.teamhub.refresh
+		<string>com.teamhub.processing
 com.teamhub.refresh
 com.teamhub.refresh</string>
 	</array>

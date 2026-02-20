@@ -12,11 +12,11 @@ final class BackgroundSyncManager {
 
     static let shared = BackgroundSyncManager()
 
-    private let taskIdentifier = "com.teamhub.refresh"
+    private let taskIdentifier = "com.teamhub.processing"
 
     private init() {}
 
-    // MARK: - Register
+    // MARK: Register
 
     func register(repository: EmployeeRepository) {
 
@@ -25,43 +25,48 @@ final class BackgroundSyncManager {
             using: nil
         ) { task in
 
-            guard let refreshTask = task as? BGAppRefreshTask else {
+            guard let processingTask = task as? BGProcessingTask else {
                 task.setTaskCompleted(success: false)
                 return
             }
 
-            self.handleAppRefresh(task: refreshTask, repository: repository)
+            self.handleProcessing(task: processingTask, repository: repository)
         }
     }
 
-    // MARK: - Schedule
+    // MARK: Schedule
 
     func schedule() {
 
-        let request = BGAppRefreshTaskRequest(identifier: taskIdentifier)
-        request.earliestBeginDate = Date(timeIntervalSinceNow: 60 * 60) // 1 hour
+        let request = BGProcessingTaskRequest(identifier: taskIdentifier)
+
+        // System will wait for good conditions → improves reliability massively
+        request.requiresNetworkConnectivity = true
+        request.requiresExternalPower = false
+
+        request.earliestBeginDate = Date(timeIntervalSinceNow: 15 * 60)
 
         do {
             try BGTaskScheduler.shared.submit(request)
+            print("✅ Background processing scheduled")
         } catch {
-            print("❌ Failed to schedule background refresh:", error)
+            print("❌ Failed to schedule processing:", error)
         }
     }
 
-    // MARK: - Handle Task
+    // MARK: Handle Task
 
-    private func handleAppRefresh(
-        task: BGAppRefreshTask,
+    private func handleProcessing(
+        task: BGProcessingTask,
         repository: EmployeeRepository
     ) {
 
-        // Always reschedule next execution
+        // always reschedule next run
         schedule()
 
-        let refreshTask = Task {
+        let work = Task(priority: .background) {
 
             do {
-                // Repository is @MainActor → safe
                 try await repository.fetchAndSync(force: false)
                 task.setTaskCompleted(success: true)
             } catch {
@@ -70,7 +75,7 @@ final class BackgroundSyncManager {
         }
 
         task.expirationHandler = {
-            refreshTask.cancel()
+            work.cancel()
         }
     }
 }

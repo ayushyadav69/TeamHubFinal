@@ -34,16 +34,16 @@ final class DefaultEmployeeRepository: EmployeeRepository {
 
     // MARK: - Sync
 
-    @MainActor
-    func fetchAndSync(force: Bool) async throws {
+//    @MainActor
+    func fetchAndSync(force: Bool) async throws -> Bool {
 
         guard networkMonitor.isConnected else {
             print("⚠️ No internet. Skipping sync.")
-            return
+            return false
         }
 
         if !force && !syncPolicy.shouldSync() {
-            return
+            return false
         }
 
         let response: EmployeeResponseDTO =
@@ -53,11 +53,14 @@ final class DefaultEmployeeRepository: EmployeeRepository {
             $0.toDomain(dateParser: dateParser)
         }
 
-        try sync(domainEmployees)
+        let changed = try sync(domainEmployees)
 
-        syncPolicy.markSynced()
+        if changed {
+            syncPolicy.markSynced()
+        }
+
+        return changed
     }
-
 
 
     // MARK: - Paging + Filtering
@@ -249,7 +252,9 @@ final class DefaultEmployeeRepository: EmployeeRepository {
 
     // MARK: - Sync Logic
 
-    private func sync(_ remoteEmployees: [Employee]) throws {
+    private func sync(_ remoteEmployees: [Employee]) throws -> Bool {
+
+        var didChange = false
 
         let descriptor = FetchDescriptor<EmployeeEntity>()
         let localEntities = try context.fetch(descriptor)
@@ -264,13 +269,14 @@ final class DefaultEmployeeRepository: EmployeeRepository {
 
             if let existing = localDict[employee.id] {
 
-                // ALWAYS ensure relations exist
+                // Ensure relations exist
                 existing.department = try department(named: employee.department)
                 existing.role = try role(named: employee.role)
 
-                // Update fields only if changed
+                // Update only if needed
                 if hasChanges(existing, comparedTo: employee) {
                     try applyChanges(from: employee, to: existing)
+                    didChange = true
                 }
 
                 localDict.removeValue(forKey: employee.id)
@@ -281,17 +287,24 @@ final class DefaultEmployeeRepository: EmployeeRepository {
                 newEntity.department = try department(named: employee.department)
                 newEntity.role = try role(named: employee.role)
                 context.insert(newEntity)
-            }
 
+                didChange = true
+            }
         }
 
+        // deletions
         for remaining in localDict.values {
             if !remoteIDs.contains(remaining.id) {
                 context.delete(remaining)
+                didChange = true
             }
         }
 
-        try context.save()
+        if didChange {
+            try context.save()
+        }
+
+        return didChange
     }
 
     // MARK: - Helpers
