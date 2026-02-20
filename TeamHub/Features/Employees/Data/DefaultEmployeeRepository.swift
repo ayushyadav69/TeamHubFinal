@@ -81,17 +81,17 @@ final class DefaultEmployeeRepository: EmployeeRepository {
         let wantsInactive = statuses.contains(.inactive)
         let filterStatus = !statuses.isEmpty
 
-        let descriptor = FetchDescriptor<EmployeeEntity>(
+        var descriptor = FetchDescriptor<EmployeeEntity>(
             predicate: #Predicate<EmployeeEntity> { entity in
 
                 // SEARCH
                 (search == nil || entity.name.localizedStandardContains(search!))
 
-                // DEPARTMENT (multi select)
+                // DEPARTMENT
                 &&
                 (deptArray.isEmpty || deptArray.contains(entity.departmentName))
 
-                // ROLE (multi select)
+                // ROLE
                 &&
                 (roleArray.isEmpty || roleArray.contains(entity.roleName))
 
@@ -105,24 +105,19 @@ final class DefaultEmployeeRepository: EmployeeRepository {
                     (wantsInactive && !entity.isActive)
                 )
             },
-            sortBy: [SortDescriptor(\EmployeeEntity.name)]
+            sortBy: [
+                SortDescriptor(\EmployeeEntity.name),
+                SortDescriptor(\EmployeeEntity.id) // important for stable paging
+            ]
         )
 
-        var result = try context.fetch(descriptor)
+        // 🔥 REAL DATABASE PAGINATION
+        descriptor.fetchLimit = paging.pageSize
+        descriptor.fetchOffset = paging.page * paging.pageSize
 
-        // Pagination manually (SwiftData offset is unstable in predicates)
-        let start = paging.page * paging.pageSize
-        let end = min(start + paging.pageSize, result.count)
+        let result = try context.fetch(descriptor)
 
-        if start < end {
-            result = Array(result[start..<end])
-        } else {
-            result = []
-        }
-
-        return result.map { (entity: EmployeeEntity) in
-            entity.toDomain()
-        }
+        return result.map { $0.toDomain() }
     }
 
 
