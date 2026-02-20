@@ -6,10 +6,11 @@
 //
 
 import SwiftUI
+import Combine
 
 struct SearchBar: View {
     @Binding var text: String
-    @FocusState private var focused: Bool
+    @FocusState.Binding var focused: Bool
     
     var body: some View {
         
@@ -21,6 +22,9 @@ struct SearchBar: View {
             TextField("Search employees", text: $text)
                 .textFieldStyle(.plain)
                 .focused($focused)
+                .onReceive(GlobalKeyboardDismiss.shared) { _ in
+                        focused = false
+                    }
             
             if !text.isEmpty {
                 Button {

@@ -14,7 +14,8 @@ struct EmployeeListView: View {
 
     @State private var showFilters = false
     @State private var isRefreshing = false
-    @State private var scrollPos: String?
+//    @State private var scrollPos: String?
+    @FocusState private var searchFocused: Bool
 
 
     var body: some View {
@@ -51,7 +52,7 @@ struct EmployeeListView: View {
 
                 } header: {
                     VStack(spacing: 0) {
-                        SearchBar(text: $vm.searchText)
+                        SearchBar(text: $vm.searchText, focused: $searchFocused)
                         
                         StatusHeaderView()
                         

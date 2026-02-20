@@ -103,7 +103,7 @@ struct GenericFilterPanel: View {
         }
 
         // multi selection
-        return selected.sorted().joined(separator: ", ")
+        return String(selected.sorted().count)
     }
 
 }

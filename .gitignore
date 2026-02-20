@@ -1,0 +1,33 @@
+# macOS
+.DS_Store
+__MACOSX/
+
+# Xcode user data
+xcuserdata/
+*.xcuserstate
+
+# Build data
+DerivedData/
+build/
+
+# Swift Package Manager
+.build/
+Packages/
+Package.resolved
+
+# CocoaPods (if ever used)
+Pods/
+
+# Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/
+
+# Archives
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Temporary
+*.swp
+*.lock

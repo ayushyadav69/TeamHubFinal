@@ -29,6 +29,7 @@ struct TeamHubApp: App {
                         }
                     }
             }
+            .dismissKeyboardOnInteract()
             // 🔴 INJECT HERE — ON STACK ROOT
             .environment(container.employeeListViewModel)
             .environment(coordinator)
