@@ -36,6 +36,12 @@ struct EmployeeListView: View {
             .fixedSize(horizontal: false, vertical: true)
             
             List {
+                if viewModel.employees.isEmpty && viewModel.isSyncing {
+                    ForEach(0..<8, id: \.self) { _ in
+                        EmployeeRowSkeleton()
+                        Divider()
+                    }
+                }else {
                 ForEach(viewModel.employees) { employee in
                     EmployeeRowView(employee: employee)
                         .contentShape(Rectangle())
@@ -55,6 +61,7 @@ struct EmployeeListView: View {
                     EndOfListBanner()
                         .listRowSeparator(.hidden)
                 }
+            }
             }
             
             .listStyle(.plain)
@@ -93,6 +100,9 @@ struct EmployeeListView: View {
         }
         .toolbarBackground(isRefreshing ? .visible : .automatic, for: .navigationBar)
         .toolbarBackground(Color(.white), for: .navigationBar)
+//        .safeAreaInset(edge: .bottom) {
+//            NetworkStatusBanner(state: viewModel.networkBannerState)
+//        }
         .task {
             await viewModel.initialLoad()
         }

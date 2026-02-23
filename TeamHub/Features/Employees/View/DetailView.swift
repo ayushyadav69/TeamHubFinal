@@ -47,7 +47,7 @@ struct DetailView: View {
             }
             
             VStack(alignment: .leading, spacing: 10) {
-                row("EmployeeId", employee.id)
+                row("EmployeeId", maskedId(employee.id))
                 row("Department", employee.department)
                 row("Gmail", employee.email)
                 row("City", employee.city)
@@ -62,6 +62,15 @@ struct DetailView: View {
         }
         .navigationTitle("Employee Detail")
         .navigationBarTitleDisplayMode(.inline)
+    }
+    
+    private func maskedId(_ id: String) -> String {
+        guard id.count > 8 else { return id }
+        
+        let prefix = id.prefix(4)
+        let suffix = id.suffix(4)
+        
+        return "\(prefix)••••\(suffix)"
     }
     
     func row(_ title: String, _ value: String) -> some View {
@@ -85,7 +94,7 @@ struct DetailView: View {
 
     DetailView(
         employee: Employee(
-            id: "DL807",
+            id: "DL807-zsbwhwhzb-sjhqhh-abb09",
             name: "Ayush Yadav",
             role: "Intern",
             department: "iOS Development",

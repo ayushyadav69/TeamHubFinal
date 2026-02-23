@@ -49,7 +49,7 @@ var body: some View {
             .foregroundStyle(.secondary)
 
     }
-    .padding(.top, 44)
+//    .padding(.top, 44)
 //    .padding(.bottom, 70)
     .frame(maxWidth: .infinity, alignment: .leading)
 }

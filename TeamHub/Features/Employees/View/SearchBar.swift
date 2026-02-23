@@ -35,14 +35,14 @@ struct SearchBar: View {
                 }
             }
         }
-        .padding(.horizontal, 12)
+        .padding(.horizontal)
         .padding(.vertical, 10)
         .background(
             RoundedRectangle(cornerRadius: 12)
                 .fill(Color(.systemGray6))
         )
         .padding(.horizontal)
-        .padding(.vertical, 8)
+        .padding(.bottom, 8)
         .background(Color(.systemBackground)) // blends with navbar like native search
     }
 }

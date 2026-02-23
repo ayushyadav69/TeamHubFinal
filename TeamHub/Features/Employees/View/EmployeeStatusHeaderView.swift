@@ -21,7 +21,8 @@ struct EmployeeStatusHeaderView: View {
             card(title: "Inactive", value: viewModel.inactiveCount)
 
         }
-        .padding()
+        .padding(.horizontal)
+        .padding(.vertical, 8)
         .background(.ultraThinMaterial)
         
     }
@@ -31,7 +32,7 @@ struct EmployeeStatusHeaderView: View {
         HStack(spacing: 10) {
             
             Text(title)
-                .font(.body)
+                .font(.subheadline)
                 .fontWeight(.light)
             
             Text("\(value)")
