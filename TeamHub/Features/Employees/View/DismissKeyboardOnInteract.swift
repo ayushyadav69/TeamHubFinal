@@ -17,7 +17,7 @@ struct DismissKeyboardOnInteract: ViewModifier {
     func body(content: Content) -> some View {
         content
             .scrollDismissesKeyboard(.immediately)
-            .simultaneousGesture(
+            .gesture(
                 TapGesture().onEnded {
                     GlobalKeyboardDismiss.shared.send()
                 }
