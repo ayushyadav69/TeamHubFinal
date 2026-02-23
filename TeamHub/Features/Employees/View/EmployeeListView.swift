@@ -35,38 +35,77 @@ struct EmployeeListView: View {
             }
             .fixedSize(horizontal: false, vertical: true)
             
-            List {
-                if viewModel.employees.isEmpty && viewModel.isSyncing {
+          
+
+                // 1️⃣ Shimmer State
+                if viewModel.isInitialLoading {
                     ForEach(0..<8, id: \.self) { _ in
                         EmployeeRowSkeleton()
                         Divider()
                     }
-                }else {
-                ForEach(viewModel.employees) { employee in
-                    EmployeeRowView(employee: employee)
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            coordinator.path.append(AppRoute.employeeDetail(employee))
+                }
+
+                // 2️⃣ Error State
+                else if viewModel.employees.isEmpty,
+                        let error = viewModel.errorMessage {
+
+                    EmptyStateView(
+                        message: error,
+                        retryAction: {
+                            Task { await viewModel.refresh() }
                         }
-                        .onAppear {
-                            viewModel.loadMoreIfNeeded(current: employee)
-                        }
+                    )
+                    .frame(maxWidth: .infinity)
+                    .listRowSeparator(.hidden)
+                    .listRowBackground(Color.clear)
+                    .listRowInsets(EdgeInsets())   // 👈 important
                 }
-                if viewModel.isLoading && viewModel.canLoadMore {
-                    HStack { Spacer(); ProgressView(); Spacer() }
-                        .listRowSeparator(.hidden)
+
+                // 3️⃣ Empty Data State
+                else if viewModel.employees.isEmpty {
+
+                    EmptyStateView(
+                        message: hasActiveFilters
+                        ? "No employees match the selected filters."
+                        : "No employees found."
+                    )
+                    .frame(maxWidth: .infinity)
+                    .listRowSeparator(.hidden)
+                    .listRowBackground(Color.clear)
+                    .listRowInsets(EdgeInsets())   // 👈 important
                 }
-                
-                if !viewModel.canLoadMore && !viewModel.employees.isEmpty {
-                    EndOfListBanner()
-                        .listRowSeparator(.hidden)
+
+                // 4️⃣ Normal List
+                else {
+                    List {
+                    
+                    ForEach(viewModel.employees) { employee in
+                        EmployeeRowView(employee: employee)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                coordinator.path.append(AppRoute.employeeDetail(employee))
+                            }
+                            .onAppear {
+                                viewModel.loadMoreIfNeeded(current: employee)
+                            }
+                    }
+                    
+                    if viewModel.isLoading && viewModel.canLoadMore {
+                        HStack { Spacer(); ProgressView(); Spacer() }
+                            .listRowSeparator(.hidden)
+                    }
+                    
+                    if !viewModel.canLoadMore && !viewModel.employees.isEmpty {
+                        EndOfListBanner()
+                            .listRowSeparator(.hidden)
+                    }
                 }
-            }
-            }
+                    .listStyle(.plain)
+                    .ignoresSafeArea(.keyboard, edges: .bottom)
+                }
+    
             
-            .listStyle(.plain)
-//            .scrollContentBackground(.hidden)
-            .ignoresSafeArea(.keyboard, edges: .bottom)
+           
         }
         .navigationTitle("Employees")
         .navigationBarTitleDisplayMode(.large)
