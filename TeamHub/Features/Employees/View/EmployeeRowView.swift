@@ -8,33 +8,46 @@
 import SwiftUI
 
 struct EmployeeRowView: View {
-    
+
     let employee: Employee
-    
+    @Environment(\.colorScheme) private var scheme
+
     var body: some View {
         HStack {
             CachedAsyncImage(url: employee.imageURL) { image in
-                image
-                    .resizable()
+                image.resizable()
             } placeholder: {
                 Image(systemName: "person.fill")
                     .resizable()
-                    .background(.gray)
+                    .scaledToFit()
+                    .padding(12)
+                    .background(Color(.secondarySystemBackground))
             }
             .frame(width: 60, height: 60)
             .clipShape(Circle())
             .overlay {
-                Circle().stroke(.white, lineWidth: 2)
+                Circle()
+                    .stroke(
+                        scheme == .dark
+                        ? Color.white.opacity(0.15)
+                        : Color.white,
+                        lineWidth: 2
+                    )
             }
-            .shadow(radius: 10)
-            
+            .shadow(
+                color: scheme == .dark ? .black.opacity(0.6) : .black.opacity(0.15),
+                radius: 8,
+                y: 4
+            )
+
             VStack(alignment: .leading) {
                 HStack {
                     Text(employee.name)
                         .font(.headline)
-                    
+                        .foregroundStyle(.primary)
+
                     Spacer()
-                    
+
                     Text(employee.isActive ? "Active" : "Inactive")
                         .font(.caption)
                         .fontWeight(.medium)
@@ -42,22 +55,22 @@ struct EmployeeRowView: View {
                         .padding(.vertical, 4)
                         .background(
                             Capsule()
-                                .fill(employee.isActive
-                                      ? Color.green.opacity(0.15)
-                                      : Color.red.opacity(0.15))
+                                .fill(
+                                    employee.isActive
+                                    ? Color.green.opacity(scheme == .dark ? 0.25 : 0.15)
+                                    : Color.red.opacity(scheme == .dark ? 0.25 : 0.15)
+                                )
                         )
                         .foregroundStyle(employee.isActive ? .green : .red)
                 }
-                
+
                 Text("\(employee.role), \(employee.department)")
-                
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
             .padding(.leading, 10)
         }
         .padding(.vertical)
-//        .background(Color(uiColor: .secondarySystemGroupedBackground))
     }
 }
 

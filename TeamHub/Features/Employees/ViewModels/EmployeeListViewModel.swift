@@ -51,9 +51,9 @@ final class EmployeeListViewModel {
     
     var isLoading = false
     var isSyncing = false
-    var errorMessage: String?
+    var appError: AppError?
     var isOffline = false
-    var isInitialLoading = true
+//    var isInitialLoading = true
     
     // MARK: - Paging
     
@@ -99,8 +99,10 @@ final class EmployeeListViewModel {
     
     func initialLoad() async {
         
-        errorMessage = nil
-        isInitialLoading = true
+//        isSyncing = true
+//        defer { isSyncing = false }
+//        
+//        isInitialLoading = true
         
         if !employees.isEmpty { return }
         // show cached DB immediately
@@ -116,7 +118,7 @@ final class EmployeeListViewModel {
             await loadFilters()
             loadCounts()
         }
-        isInitialLoading = false
+//        isInitialLoading = false
     }
     
     func syncIfNeeded() async -> Bool {
@@ -129,7 +131,7 @@ final class EmployeeListViewModel {
         do {
             return try await repository.fetchAndSync(force: false)
         } catch {
-            errorMessage = error.localizedDescription
+            appError = AppError(message: error.localizedDescription)
             return false
         }
     }
@@ -181,7 +183,7 @@ final class EmployeeListViewModel {
             loadCounts()
             
         } catch {
-            errorMessage = error.localizedDescription
+            appError = AppError(message: error.localizedDescription)
         }
     }
     
@@ -210,7 +212,7 @@ final class EmployeeListViewModel {
             departments = try repository.fetchDepartments()
             roles = try repository.fetchRoles()
         } catch {
-            errorMessage = error.localizedDescription
+            appError = AppError(message: error.localizedDescription)
         }
     }
     
@@ -239,7 +241,7 @@ final class EmployeeListViewModel {
             )
             
         } catch {
-            errorMessage = error.localizedDescription
+            appError = AppError(message: error.localizedDescription)
         }
     }
     
@@ -262,7 +264,7 @@ final class EmployeeListViewModel {
             }
             
         } catch {
-            errorMessage = error.localizedDescription
+            appError = AppError(message: error.localizedDescription)
         }
     }
 }

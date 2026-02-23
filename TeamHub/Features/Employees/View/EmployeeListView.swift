@@ -25,7 +25,7 @@ struct EmployeeListView: View {
 
     var body: some View {
 
-//        @Bindable var vm = viewModel
+        @Bindable var vm = viewModel
         VStack(spacing: 0) {
             
             VStack {
@@ -38,27 +38,11 @@ struct EmployeeListView: View {
           
 
                 // 1️⃣ Shimmer State
-                if viewModel.isInitialLoading {
+            if viewModel.employees.isEmpty && viewModel.isSyncing {
                     ForEach(0..<8, id: \.self) { _ in
                         EmployeeRowSkeleton()
                         Divider()
                     }
-                }
-
-                // 2️⃣ Error State
-                else if viewModel.employees.isEmpty,
-                        let error = viewModel.errorMessage {
-
-                    EmptyStateView(
-                        message: error,
-                        retryAction: {
-                            Task { await viewModel.refresh() }
-                        }
-                    )
-                    .frame(maxWidth: .infinity)
-                    .listRowSeparator(.hidden)
-                    .listRowBackground(Color.clear)
-                    .listRowInsets(EdgeInsets())   // 👈 important
                 }
 
                 // 3️⃣ Empty Data State
@@ -107,6 +91,15 @@ struct EmployeeListView: View {
             
            
         }
+        .alert(item: $vm.appError) { error in
+            Alert(
+                title: Text("Something went wrong"),
+                message: Text(error.message),
+                dismissButton: .default(Text("OK")) {
+                    viewModel.appError = nil
+                }
+            )
+        }
         .navigationTitle("Employees")
         .navigationBarTitleDisplayMode(.large)
         .refreshable {
@@ -138,7 +131,7 @@ struct EmployeeListView: View {
             }
         }
         .toolbarBackground(isRefreshing ? .visible : .automatic, for: .navigationBar)
-        .toolbarBackground(Color(.white), for: .navigationBar)
+//        .toolbarBackground(Color(.systemBackground), for: .navigationBar)
 //        .safeAreaInset(edge: .bottom) {
 //            NetworkStatusBanner(state: viewModel.networkBannerState)
 //        }

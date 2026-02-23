@@ -39,7 +39,7 @@ struct SearchBar: View {
         .padding(.vertical, 10)
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(Color(.systemGray6))
+                .fill(Color(.secondarySystemBackground))
         )
         .padding(.horizontal)
         .padding(.bottom, 8)

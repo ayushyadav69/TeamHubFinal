@@ -22,7 +22,7 @@ struct FilterFieldRow: View {
 
                 if isActive {
                     Circle()
-                        .fill(Color.blue)
+                        .fill(Color.accentColor)
                         .frame(width: 7, height: 7)
                 }
 
