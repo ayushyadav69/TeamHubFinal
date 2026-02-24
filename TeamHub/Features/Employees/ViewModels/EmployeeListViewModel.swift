@@ -53,7 +53,7 @@ final class EmployeeListViewModel {
     var isSyncing = false
     var appError: AppError?
     var isOffline = false
-//    var isInitialLoading = true
+    var isInitialLoading : Bool = true
     
     // MARK: - Paging
     
@@ -99,6 +99,9 @@ final class EmployeeListViewModel {
     
     func initialLoad() async {
         
+        isInitialLoading = true
+        defer { isInitialLoading = false }
+        
         if !employees.isEmpty { return }
         // show cached DB immediately
         await loadInitialPage()
@@ -113,7 +116,7 @@ final class EmployeeListViewModel {
             await loadFilters()
             loadCounts()
         }
-//        isInitialLoading = false
+        
     }
     
     func syncIfNeeded() async -> Bool {

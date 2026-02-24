@@ -29,7 +29,7 @@ struct DetailView: View {
             } placeholder: {
                 Image(systemName: "person.fill")
                     .resizable()
-                    .scaledToFit()
+                    .scaledToFill()
                     .padding(30)
                     .background(Color(.secondarySystemBackground))
             }
@@ -62,11 +62,27 @@ struct DetailView: View {
                         .font(.headline)
                         .foregroundStyle(.secondary)
                 }
-
+                
                 VStack(alignment: .leading, spacing: 15) {
                     row("EmployeeId", maskedId(employee.id))
                     row("Department", employee.department)
-                    row("Gmail", employee.email)
+                    HStack(alignment: .firstTextBaseline) {
+                        Text("Gmail").foregroundStyle(.secondary)
+                        Spacer()
+                        if let url = URL(string: "mailto:\(employee.email)") {
+                            Button {
+                                if UIApplication.shared.canOpenURL(url) {
+                                    UIApplication.shared.open(url)
+                                } else {
+                                    print("Cannot open mail app")
+                                }
+                            } label: {
+                                Text(employee.email)
+                                    .fontWeight(.medium)
+                                    .foregroundStyle(.tint)
+                            }
+                        }
+                    }
                     row("City", employee.city)
                     row("Country", employee.country)
                     row("Joining Date", employee.joiningDate.formatted(date: .numeric, time: .omitted))

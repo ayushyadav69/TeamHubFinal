@@ -63,7 +63,7 @@ struct EmployeeListView: View {
             
             
             // 1️⃣ Shimmer State
-            if viewModel.employees.isEmpty && ( viewModel.isSyncing || viewModel.isLoading ) {
+            if viewModel.employees.isEmpty && ( viewModel.isSyncing || viewModel.isLoading || viewModel.isInitialLoading ) {
                 List{
                     ForEach(0..<8, id: \.self) { _ in
                         EmployeeRowSkeleton()
@@ -75,7 +75,6 @@ struct EmployeeListView: View {
             
             // 3️⃣ Empty Data State
             else if viewModel.employees.isEmpty {
-                
                 EmptyStateView(
                     message: hasActiveFilters
                     ? "No employees match the selected filters."
