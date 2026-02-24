@@ -14,7 +14,7 @@ struct SearchBar: View {
     
     var body: some View {
         @Bindable var vm = viewModel
-        HStack(spacing: 8) {
+        HStack {
             
             Image(systemName: "magnifyingglass")
                 .foregroundStyle(.secondary)
@@ -41,8 +41,8 @@ struct SearchBar: View {
             RoundedRectangle(cornerRadius: 12)
                 .fill(Color(.secondarySystemBackground))
         )
-        .padding(.horizontal)
-        .padding(.bottom, 8)
+        .padding(.leading)
+//        .padding(.bottom, 8)
         .background(Color(.systemBackground)) // blends with navbar like native search
     }
 }

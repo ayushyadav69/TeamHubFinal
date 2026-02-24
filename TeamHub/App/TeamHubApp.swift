@@ -15,6 +15,16 @@ struct TeamHubApp: App {
     @State private var coordinator = AppCoordinator()
     @State private var showEntry = true   // 🔥 Add this
     
+    init() {
+        let cache = URLCache(
+            memoryCapacity: 100 * 1024 * 1024, // 100 MB RAM
+            diskCapacity: 500 * 1024 * 1024,   // 500 MB disk
+            diskPath: "github-image-cache"
+        )
+
+        URLCache.shared = cache
+    }
+    
     var body: some Scene {
         WindowGroup {
             

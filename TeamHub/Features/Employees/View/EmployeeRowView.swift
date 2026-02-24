@@ -70,7 +70,7 @@ struct EmployeeRowView: View {
             }
             .padding(.leading, 10)
         }
-        .padding(.vertical)
+//        .padding(.vertical)
     }
 }
 

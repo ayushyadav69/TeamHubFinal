@@ -99,11 +99,6 @@ final class EmployeeListViewModel {
     
     func initialLoad() async {
         
-//        isSyncing = true
-//        defer { isSyncing = false }
-//        
-//        isInitialLoading = true
-        
         if !employees.isEmpty { return }
         // show cached DB immediately
         await loadInitialPage()
@@ -139,6 +134,10 @@ final class EmployeeListViewModel {
     // MARK: - Paging
     
     func loadInitialPage() async {
+        
+//        isLoading = true
+//        defer { isLoading = false }
+        
         currentPage = 0
         canLoadMore = true
         employees.removeAll()

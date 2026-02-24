@@ -8,60 +8,89 @@
 import SwiftUI
 
 struct EmployeeListView: View {
-
+    
     @Environment(EmployeeListViewModel.self) private var viewModel
     @Environment(AppCoordinator.self) private var coordinator
-
+    
     @State private var showFilters = false
     @State private var isRefreshing = false
-//    @State private var scrollPos: String?
-//    @FocusState private var searchFocused: Bool
-
+    //    @State private var scrollPos: String?
+    //    @FocusState private var searchFocused: Bool
+    
     private var hasActiveFilters: Bool {
         !viewModel.selectedDepartments.isEmpty ||
         !viewModel.selectedRoles.isEmpty ||
         !viewModel.selectedStatuses.isEmpty
     }
-
+    
     var body: some View {
-
+        
         @Bindable var vm = viewModel
         VStack(spacing: 0) {
             
             VStack {
-                SearchBar()
-                StatusHeaderView()
+                HStack {
+                    SearchBar()
+                    
+                    Button {
+                        showFilters.toggle()
+                    } label: {
+                        Image(systemName: hasActiveFilters
+                              ? "line.3.horizontal.decrease.circle.fill"
+                              : "line.3.horizontal.decrease.circle")
+                        //                        .resizable()
+                        .font(.system(size: 30))
+                        .foregroundStyle(Color(.label))
+                    }
+                    .padding(.trailing)
+                    .popover(isPresented: $showFilters, attachmentAnchor: .rect(.bounds), arrowEdge: .top) {
+                        GenericFilterPanel(
+                            sections: filterSections,
+                            preselected: currentSelections,
+                            onApply: applyFilters,
+                            onReset: resetFilters
+                        )
+                        .frame(width: 300)
+                        .presentationCompactAdaptation(.popover)
+                    }
+                }
+                //                StatusHeaderView()
                 EmployeeStatusHeaderView()
             }
-            .fixedSize(horizontal: false, vertical: true)
+            Divider()
+            //            .fixedSize(horizontal: false, vertical: true)
             
-          
-
-                // 1️⃣ Shimmer State
-            if viewModel.employees.isEmpty && viewModel.isSyncing {
+            
+            
+            // 1️⃣ Shimmer State
+            if viewModel.employees.isEmpty && ( viewModel.isSyncing || viewModel.isLoading ) {
+                List{
                     ForEach(0..<8, id: \.self) { _ in
                         EmployeeRowSkeleton()
                         Divider()
                     }
                 }
-
-                // 3️⃣ Empty Data State
-                else if viewModel.employees.isEmpty {
-
-                    EmptyStateView(
-                        message: hasActiveFilters
-                        ? "No employees match the selected filters."
-                        : "No employees found."
-                    )
-                    .frame(maxWidth: .infinity)
-                    .listRowSeparator(.hidden)
-                    .listRowBackground(Color.clear)
-                    .listRowInsets(EdgeInsets())   // 👈 important
-                }
-
-                // 4️⃣ Normal List
-                else {
-                    List {
+                .listStyle(.plain)
+            }
+            
+            // 3️⃣ Empty Data State
+            else if viewModel.employees.isEmpty {
+                
+                EmptyStateView(
+                    message: hasActiveFilters
+                    ? "No employees match the selected filters."
+                    : "No employees found."
+                )
+                .frame(maxWidth: .infinity)
+                .listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
+                .listRowInsets(EdgeInsets())   // 👈 important
+            }
+            
+            // 4️⃣ Normal List
+            else {
+                List {
+                    //                        StatusHeaderView()
                     
                     ForEach(viewModel.employees) { employee in
                         EmployeeRowView(employee: employee)
@@ -84,12 +113,17 @@ struct EmployeeListView: View {
                             .listRowSeparator(.hidden)
                     }
                 }
-                    .listStyle(.plain)
-                    .ignoresSafeArea(.keyboard, edges: .bottom)
+                .listStyle(.plain)
+                .ignoresSafeArea(.keyboard, edges: .bottom)
+                .refreshable {
+                    isRefreshing = true
+                    await viewModel.refresh()
+                    isRefreshing = false
                 }
-    
+            }
             
-           
+            
+            
         }
         .alert(item: $vm.appError) { error in
             Alert(
@@ -102,39 +136,17 @@ struct EmployeeListView: View {
         }
         .navigationTitle("Employees")
         .navigationBarTitleDisplayMode(.large)
-        .refreshable {
-            isRefreshing = true
-            await viewModel.refresh()
-            isRefreshing = false
-        }
+        
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    showFilters.toggle()
-                } label: {
-                    Image(systemName: hasActiveFilters
-                          ? "line.3.horizontal.decrease.circle.fill"
-                          : "line.3.horizontal.decrease.circle")
-//                    .symbolRenderingMode(.hierarchical)
-//                    .foregroundStyle(hasActiveFilters ? .blue : .primary)
-                }
-                .popover(isPresented: $showFilters, attachmentAnchor: .rect(.bounds), arrowEdge: .top) {
-                    GenericFilterPanel(
-                        sections: filterSections,
-                        preselected: currentSelections,
-                        onApply: applyFilters,
-                        onReset: resetFilters
-                    )
-                    .frame(width: 300)
-                    .presentationCompactAdaptation(.popover)
-                }
+                StatusHeaderView()
             }
         }
         .toolbarBackground(isRefreshing ? .visible : .automatic, for: .navigationBar)
-//        .toolbarBackground(Color(.systemBackground), for: .navigationBar)
-//        .safeAreaInset(edge: .bottom) {
-//            NetworkStatusBanner(state: viewModel.networkBannerState)
-//        }
+        //        .toolbarBackground(Color(.systemBackground), for: .navigationBar)
+        //        .safeAreaInset(edge: .bottom) {
+        //            NetworkStatusBanner(state: viewModel.networkBannerState)
+        //        }
         .task {
             await viewModel.initialLoad()
         }
@@ -142,7 +154,7 @@ struct EmployeeListView: View {
 }
 
 private extension EmployeeListView {
-
+    
     var filterSections: [FilterSection] {
         [
             .init(
@@ -165,7 +177,7 @@ private extension EmployeeListView {
             )
         ]
     }
-
+    
     
     var currentSelections: [String: Set<String>] {
         [
@@ -176,21 +188,21 @@ private extension EmployeeListView {
             })
         ]
     }
-
+    
     func applyFilters(_ dict: [String: Set<String>]) {
-
+        
         viewModel.selectedDepartments = dict["Department"] ?? []
         viewModel.selectedRoles = dict["Role"] ?? []
-
+        
         let statusValues = dict["Status"] ?? []
-
+        
         viewModel.selectedStatuses =
-            Set(statusValues.compactMap {
-                $0 == "Active" ? .active :
-                $0 == "Inactive" ? .inactive : nil
-            })
+        Set(statusValues.compactMap {
+            $0 == "Active" ? .active :
+            $0 == "Inactive" ? .inactive : nil
+        })
     }
-
+    
     func resetFilters() {
         viewModel.selectedDepartments = []
         viewModel.selectedRoles = []

@@ -23,7 +23,7 @@ struct EmployeeStatusHeaderView: View {
         }
         .padding(.horizontal)
         .padding(.vertical, 8)
-        .background(.ultraThinMaterial)
+        .background(Color(.systemBackground))
         
     }
 

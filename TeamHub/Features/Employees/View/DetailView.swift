@@ -20,7 +20,7 @@ struct DetailView: View {
                     ? Color.green.opacity(scheme == .dark ? 0.25 : 0.4)
                     : Color.red.opacity(scheme == .dark ? 0.35 : 0.8)
                 )
-                .frame(height: 300)
+                .frame(height: 250)
 
             Spacer()
 
@@ -59,11 +59,11 @@ struct DetailView: View {
                         .foregroundStyle(.primary)
 
                     Text(employee.role)
-                        .font(.subheadline)
+                        .font(.headline)
                         .foregroundStyle(.secondary)
                 }
 
-                VStack(alignment: .leading, spacing: 10) {
+                VStack(alignment: .leading, spacing: 15) {
                     row("EmployeeId", maskedId(employee.id))
                     row("Department", employee.department)
                     row("Gmail", employee.email)

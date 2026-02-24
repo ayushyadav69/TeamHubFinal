@@ -16,34 +16,35 @@ struct FieldOptionsPopover: View {
     @Binding var selections: Set<String>
 
     var body: some View {
-
-        VStack(alignment: .leading, spacing: 8) {
-
-            Text(title)
-                .font(.headline)
-                .padding(.bottom, 6)
-
-            ForEach(options, id: \.self) { option in
-                Button {
-                    select(option)
-                } label: {
-                    HStack {
-                        Text(option)
-                        Spacer()
-
-                        if selections.contains(option) {
-                            Image(systemName: "checkmark")
-                        }
-                    }
-                    .contentShape(Rectangle())
-                }
+        ScrollView {
+            
+            VStack(alignment: .leading, spacing: 8) {
                 
-                .buttonStyle(.plain)
-                .padding(.vertical, 4)
+                Text(title)
+                    .font(.headline)
+                    .padding(.bottom, 6)
+                
+                ForEach(options, id: \.self) { option in
+                    Button {
+                        select(option)
+                    } label: {
+                        HStack {
+                            Text(option)
+                            Spacer()
+                            
+                            if selections.contains(option) {
+                                Image(systemName: "checkmark")
+                            }
+                        }
+                        .contentShape(Rectangle())
+                    }
+                    
+                    .buttonStyle(.plain)
+                    .padding(.vertical, 4)
+                }
             }
+            .padding(14)
         }
-        .padding(14)
-//        .fixedSize()
     }
 
     private func select(_ value: String) {

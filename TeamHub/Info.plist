@@ -4,9 +4,7 @@
 <dict>
 	<key>BGTaskSchedulerPermittedIdentifiers</key>
 	<array>
-		<string>com.teamhub.processing
-com.teamhub.refresh
-com.teamhub.refresh</string>
+		<string>com.teamhub.processing</string>
 	</array>
 	<key>UIBackgroundModes</key>
 	<array>

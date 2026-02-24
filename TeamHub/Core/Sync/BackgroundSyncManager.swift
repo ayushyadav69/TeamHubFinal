@@ -65,17 +65,20 @@ final class BackgroundSyncManager {
         schedule()
 
         let work = Task(priority: .background) {
-
-            do {
-                try await repository.fetchAndSync(force: false)
-                task.setTaskCompleted(success: true)
-            } catch {
-                task.setTaskCompleted(success: false)
-            }
+            try await repository.fetchAndSync(force: false)
         }
 
         task.expirationHandler = {
             work.cancel()
+        }
+
+        Task {
+            do {
+                try await work.value
+                task.setTaskCompleted(success: !work.isCancelled)
+            } catch {
+                task.setTaskCompleted(success: false)
+            }
         }
     }
 }
