@@ -26,7 +26,19 @@ final class URLSessionNetworkService: NetworkService {
         var request = URLRequest(url: url)
         request.httpMethod = endpoint.method.rawValue
         
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let data: Data
+        let response: URLResponse
+        
+        do {
+            (data, response) = try await URLSession.shared.data(for: request)
+        } catch {
+            // 👇 THIS is the fix
+            if let urlError = error as? URLError,
+               urlError.code == .cancelled {
+                throw CancellationError()
+            }
+            throw error
+        }
         
         guard let httpResponse = response as? HTTPURLResponse else {
             throw NetworkError.invalidResponse

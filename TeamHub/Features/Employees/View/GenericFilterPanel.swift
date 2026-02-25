@@ -33,12 +33,13 @@ struct GenericFilterPanel: View {
     }
 
     var body: some View {
-
+        
+        ZStack {
         VStack(alignment: .leading, spacing: 14) {
-
+            
             Text("Filters")
                 .font(.headline)
-
+            
             ForEach(sections, id: \.self) { section in
                 FilterFieldRow(
                     title: section.title,
@@ -47,17 +48,17 @@ struct GenericFilterPanel: View {
                     action: { openedSection = section }
                 )
             }
-
+            
             Divider()
-
+            
             HStack {
                 Button("Reset") {
                     selections.removeAll()
                     onReset()
                 }
-
+                
                 Spacer()
-
+                
                 Button("Done") {
                     onApply(selections)
                     dismiss()
@@ -67,13 +68,22 @@ struct GenericFilterPanel: View {
         }
         .frame(height: 300)
         .padding(.horizontal)
+            if openedSection != nil {
+                Color(.label).opacity(0.08)
+                        .ignoresSafeArea()
+                        .allowsHitTesting(false)
+                }
+    }
+        
+//        .opacity(openedSection != nil ? 0.9 : 1)
+//        .animation(.easeInOut(duration: 0.15), value: openedSection)
 //        .padding(14)
 //        .frame(width: 320)
 //        .fixedSize(horizontal: false, vertical: true)
         .popover(isPresented: Binding(
             get: { openedSection != nil },
             set: { if !$0 { openedSection = nil } }
-        )) {
+        ), attachmentAnchor: .rect(.bounds), arrowEdge: .top) {
             if let section = openedSection {
                 FieldOptionsPopover(
                     title: section.title,
@@ -84,8 +94,9 @@ struct GenericFilterPanel: View {
                         set: { selections[section.key] = $0 }
                     )
                 )
-                .frame(width: 200)
+                .frame(width: 250)
                 .presentationCompactAdaptation(.popover)
+                .interactiveDismissDisabled()
             }
         }
     }

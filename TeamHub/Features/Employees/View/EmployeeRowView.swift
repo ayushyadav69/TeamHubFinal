@@ -42,7 +42,7 @@ struct EmployeeRowView: View {
 
             VStack(alignment: .leading) {
                 HStack {
-                    Text(employee.name)
+                    Text(employee.name.capitalized)
                         .font(.headline)
                         .foregroundStyle(.primary)
 

@@ -128,6 +128,8 @@ final class EmployeeListViewModel {
         
         do {
             return try await repository.fetchAndSync(force: false)
+        } catch is CancellationError {
+            return false   // ignore silently
         } catch {
             appError = AppError(message: error.localizedDescription)
             return false
@@ -184,6 +186,8 @@ final class EmployeeListViewModel {
             // 🔥 Always refresh counts from DB
             loadCounts()
             
+        } catch is CancellationError {
+            // ignore silently
         } catch {
             appError = AppError(message: error.localizedDescription)
         }
@@ -265,6 +269,8 @@ final class EmployeeListViewModel {
                 loadCounts()
             }
             
+        }catch is CancellationError {
+            // ignore silently
         } catch {
             appError = AppError(message: error.localizedDescription)
         }

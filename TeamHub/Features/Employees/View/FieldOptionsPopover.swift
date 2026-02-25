@@ -15,38 +15,62 @@ struct FieldOptionsPopover: View {
 
     @Binding var selections: Set<String>
 
+    @Environment(\.dismiss) private var dismiss
+
     var body: some View {
-        ScrollView {
+        VStack(alignment: .leading) {
             
-            VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Button("Reset") {
+                    selections.removeAll()
+                }
+
+                Spacer()
+
+                Button("Done") {
+                    dismiss()
+                }
+                .buttonStyle(.borderedProminent)
+            }
+//            .padding(.vertical)
+            
+            Text(title)
+                .font(.headline)
+                .padding(.bottom, 6)
+            
+            Divider()
+
+            ScrollView {
+
                 
-                Text(title)
-                    .font(.headline)
-                    .padding(.bottom, 6)
-                
-                ForEach(options, id: \.self) { option in
-                    Button {
-                        select(option)
-                    } label: {
-                        HStack {
-                            Text(option)
-                            Spacer()
-                            
-                            if selections.contains(option) {
-                                Image(systemName: "checkmark")
+
+                    ForEach(options, id: \.self) { option in
+                        Button {
+                            select(option)
+                        } label: {
+                            HStack {
+                                Text(option)
+                                Spacer()
+
+                                if selections.contains(option) {
+                                    Image(systemName: "checkmark")
+                                }
                             }
+                            .contentShape(Rectangle())
                         }
-                        .contentShape(Rectangle())
+                        .buttonStyle(.plain)
+                        .padding(.bottom, 4)
                     }
                     
-                    .buttonStyle(.plain)
-                    .padding(.vertical, 4)
-                }
+                
             }
-            .padding(14)
-        }
-    }
+//            .padding(.bottom)
+            
 
+            
+        }
+        .padding()
+    }
     private func select(_ value: String) {
         if allowsMultiple {
             if selections.contains(value) {

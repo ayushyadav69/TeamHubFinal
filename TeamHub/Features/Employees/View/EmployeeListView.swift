@@ -52,6 +52,7 @@ struct EmployeeListView: View {
                         )
                         .frame(width: 300)
                         .presentationCompactAdaptation(.popover)
+                        .interactiveDismissDisabled()
                     }
                 }
                 //                StatusHeaderView()
@@ -88,6 +89,7 @@ struct EmployeeListView: View {
             
             // 4️⃣ Normal List
             else {
+                ZStack {
                 List {
                     //                        StatusHeaderView()
                     
@@ -118,6 +120,12 @@ struct EmployeeListView: View {
                     isRefreshing = true
                     await viewModel.refresh()
                     isRefreshing = false
+                }
+                    if showFilters {
+                        Color(.label).opacity(0.15)
+                            .ignoresSafeArea()
+                            .allowsHitTesting(false)
+                    }
                 }
             }
             

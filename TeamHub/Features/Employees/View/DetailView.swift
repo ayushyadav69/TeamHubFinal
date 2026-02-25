@@ -54,38 +54,63 @@ struct DetailView: View {
 
             VStack {
                 VStack {
-                    Text(employee.name)
+                    Text(employee.name.capitalized)
                         .font(.title)
                         .foregroundStyle(.primary)
 
-                    Text(employee.role)
-                        .font(.headline)
-                        .foregroundStyle(.secondary)
+                    HStack(spacing: 6) {
+                        Image(systemName: "briefcase")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary.opacity(0.8))
+
+                        Text(employee.role)
+                            .font(.headline)
+                            .foregroundStyle(.secondary)
+                    }
                 }
                 
                 VStack(alignment: .leading, spacing: 15) {
-                    row("EmployeeId", maskedId(employee.id))
-                    row("Department", employee.department)
-                    HStack(alignment: .firstTextBaseline) {
-                        Text("Gmail").foregroundStyle(.secondary)
+                    
+                    row("Employee Id", maskedId(employee.id), systemImage: "number")
+
+                    row("Department", employee.department, systemImage: "building.2")
+
+                    HStack(alignment: .firstTextBaseline, spacing: 12) {
+                        
+                        Image(systemName: "envelope")
+                            .foregroundStyle(.secondary.opacity(0.8))
+                            .frame(width: 20)
+
+                        Text("Gmail")
+                            .foregroundStyle(.secondary)
+
                         Spacer()
+
                         if let url = URL(string: "mailto:\(employee.email)") {
                             Button {
                                 if UIApplication.shared.canOpenURL(url) {
                                     UIApplication.shared.open(url)
                                 } else {
-                                    print("Cannot open mail app")
+                                    print("Cannot open mail app.")
                                 }
                             } label: {
                                 Text(employee.email)
                                     .fontWeight(.medium)
                                     .foregroundStyle(.tint)
+                                    .lineLimit(2)
+                                    .multilineTextAlignment(.trailing)
+//                                    .truncationMode(.middle)
                             }
                         }
                     }
-                    row("City", employee.city)
-                    row("Country", employee.country)
-                    row("Joining Date", employee.joiningDate.formatted(date: .numeric, time: .omitted))
+
+                    row("City", employee.city, systemImage: "location")
+
+                    row("Country", employee.country, systemImage: "globe")
+
+                    row("Joining Date",
+                        employee.joiningDate.formatted(date: .numeric, time: .omitted),
+                        systemImage: "calendar")
                 }
                 .padding()
                 .background(
@@ -107,10 +132,18 @@ struct DetailView: View {
         return "\(prefix)••••\(suffix)"
     }
 
-    func row(_ title: String, _ value: String) -> some View {
-        HStack(alignment: .firstTextBaseline) {
-            Text(title).foregroundStyle(.secondary)
+    func row(_ title: String, _ value: String, systemImage: String) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 12) {
+            
+            Image(systemName: systemImage)
+                .foregroundStyle(.secondary.opacity(0.8))
+                .frame(width: 20)
+
+            Text(title)
+                .foregroundStyle(.secondary)
+
             Spacer()
+
             Text(value)
                 .fontWeight(.medium)
                 .foregroundStyle(.primary)
