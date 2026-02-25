@@ -70,6 +70,7 @@ struct FieldOptionsPopover: View {
             
         }
         .padding()
+        .background(.regularMaterial)
     }
     private func select(_ value: String) {
         if allowsMultiple {

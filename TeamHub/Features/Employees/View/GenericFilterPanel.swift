@@ -65,8 +65,10 @@ struct GenericFilterPanel: View {
                 }
                 .buttonStyle(.borderedProminent)
             }
+            
         }
-        .frame(height: 300)
+        
+        .frame(height: 250)
         .padding(.horizontal)
             if openedSection != nil {
                 Color(.label).opacity(0.08)
@@ -74,6 +76,7 @@ struct GenericFilterPanel: View {
                         .allowsHitTesting(false)
                 }
     }
+        .background(.regularMaterial)
         
 //        .opacity(openedSection != nil ? 0.9 : 1)
 //        .animation(.easeInOut(duration: 0.15), value: openedSection)
