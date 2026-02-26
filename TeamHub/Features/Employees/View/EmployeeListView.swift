@@ -36,7 +36,6 @@ struct EmployeeListView: View {
                         Image(systemName: hasActiveFilters
                               ? "line.3.horizontal.decrease.circle.fill"
                               : "line.3.horizontal.decrease.circle")
-                        //                        .resizable()
                         .font(.system(size: 30))
                         .foregroundStyle(Color(.label))
                     }

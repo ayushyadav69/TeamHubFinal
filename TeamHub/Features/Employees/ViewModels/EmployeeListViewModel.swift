@@ -140,16 +140,10 @@ final class EmployeeListViewModel {
     
     func loadInitialPage() async {
         
-//        isLoading = true
-//        defer { isLoading = false }
-        
         currentPage = 0
         canLoadMore = true
         employees.removeAll()
         await loadNextPage()
-        
-        // allow first frame to render shimmer
-        await Task.yield()
         
         hasLoadedFromDB = true
     }
@@ -183,8 +177,7 @@ final class EmployeeListViewModel {
                 currentPage += 1
             }
             
-            // 🔥 Always refresh counts from DB
-            loadCounts()
+            // 🔥 Always refresh counts from DB8u8
             
         } catch is CancellationError {
             // ignore silently
