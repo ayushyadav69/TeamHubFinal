@@ -63,7 +63,7 @@ struct DetailView: View {
                             .font(.subheadline)
                             .foregroundStyle(.secondary.opacity(0.8))
 
-                        Text(employee.role)
+                        Text(employee.role.capitalized)
                             .font(.headline)
                             .foregroundStyle(.secondary)
                     }
@@ -73,7 +73,7 @@ struct DetailView: View {
                     
                     row("Employee Id", maskedId(employee.id), systemImage: "number")
 
-                    row("Department", employee.department, systemImage: "building.2")
+                    row("Department", employee.department.capitalized, systemImage: "building.2")
 
                     HStack(alignment: .firstTextBaseline, spacing: 12) {
                         
@@ -104,9 +104,9 @@ struct DetailView: View {
                         }
                     }
 
-                    row("City", employee.city, systemImage: "location")
+                    row("City", employee.city.capitalized, systemImage: "location")
 
-                    row("Country", employee.country, systemImage: "globe")
+                    row("Country", employee.country.capitalized, systemImage: "globe")
 
                     row("Joining Date",
                         employee.joiningDate.formatted(date: .numeric, time: .omitted),

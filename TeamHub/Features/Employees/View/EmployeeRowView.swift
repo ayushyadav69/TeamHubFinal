@@ -64,7 +64,7 @@ struct EmployeeRowView: View {
                         .foregroundStyle(employee.isActive ? .green : .red)
                 }
 
-                Text("\(employee.role), \(employee.department)")
+                Text("\(employee.role.capitalized), \(employee.department.capitalized)")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
