@@ -13,13 +13,6 @@ final class AppCoordinator {
 
     var path = NavigationPath()
 
-//    func goToDetail(employee: Employee) {
-//        path.append(.employeeDetail(employee))
-//    }
-//
-//    func pop() {
-//        path.removeLast()
-//    }
 }
 
 

@@ -7,6 +7,10 @@
 
 import Foundation
 
+protocol NetworkService {
+    func performRequest(_ endpoint: Endpoint) async throws -> Data
+}
+
 final class URLSessionNetworkService: NetworkService {
     
     private let baseURL = "https://employee-static-api.onrender.com"
@@ -50,7 +54,4 @@ final class URLSessionNetworkService: NetworkService {
         
         return data
     }
-    
-    
-    
 }

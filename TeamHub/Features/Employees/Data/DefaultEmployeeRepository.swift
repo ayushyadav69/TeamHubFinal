@@ -210,41 +210,6 @@ final class DefaultEmployeeRepository: EmployeeRepository {
     }
 
 
-    // MARK: - Update / Delete
-
-//    func update(_ employee: Employee) throws {
-//
-//        let id = employee.id
-//
-//        let descriptor = FetchDescriptor<EmployeeEntity>(
-//            predicate: #Predicate<EmployeeEntity> { entity in
-//                entity.id == id
-//            }
-//        )
-//
-//        guard let entity = try context.fetch(descriptor).first else { return }
-//
-//        applyChanges(from: employee, to: entity)
-//
-//        try context.save()
-//    }
-
-//    func delete(_ employee: Employee) throws {
-//
-//        let id = employee.id
-//
-//        let descriptor = FetchDescriptor<EmployeeEntity>(
-//            predicate: #Predicate<EmployeeEntity> { entity in
-//                entity.id == id
-//            }
-//        )
-//
-//        guard let entity = try context.fetch(descriptor).first else { return }
-//
-//        context.delete(entity)
-//        try context.save()
-//    }
-
     // MARK: - Sync Logic
 
     private func sync(_ remoteEmployees: [Employee]) throws -> Bool {
@@ -357,15 +322,6 @@ final class DefaultEmployeeRepository: EmployeeRepository {
 
     }
     
-//    func employee(by id: String) throws -> Employee? {
-//
-//        let descriptor = FetchDescriptor<EmployeeEntity>(
-//            predicate: #Predicate<EmployeeEntity> { $0.id == id }
-//        )
-//
-//        return try context.fetch(descriptor).first?.toDomain()
-//    }
-
     private func department(named name: String) throws -> DepartmentEntity {
 
         let descriptor = FetchDescriptor<DepartmentEntity>(

@@ -23,11 +23,3 @@ struct Employee: Identifiable, Equatable, Hashable {
     
 }
 
-//enum EmployeeStatus: String, Hashable, CaseIterable {
-//    case active
-//    case inactive
-//
-//    init(isActive: Bool) {
-//        self = isActive ? .active : .inactive
-//    }
-//}

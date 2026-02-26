@@ -11,8 +11,6 @@ protocol EmployeeRepository {
 
     func fetchAndSync(force: Bool) async throws -> Bool
     
-//    func employee(by id: String) throws -> Employee?
-
     // 🔥 MULTI FILTER
     func fetchPage(
         searchText: String?,
@@ -41,8 +39,6 @@ protocol EmployeeRepository {
         roles: Set<String>
     ) throws -> Int
 
-//    func update(_ employee: Employee) throws
-//    func delete(_ employee: Employee) throws
     func fetchDepartments() throws -> [String]
     func fetchRoles() throws -> [String]
 }

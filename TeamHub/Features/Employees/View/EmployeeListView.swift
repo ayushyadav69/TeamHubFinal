@@ -14,8 +14,6 @@ struct EmployeeListView: View {
     
     @State private var showFilters = false
     @State private var isRefreshing = false
-    //    @State private var scrollPos: String?
-    //    @FocusState private var searchFocused: Bool
     
     private var hasActiveFilters: Bool {
         !viewModel.selectedDepartments.isEmpty ||
@@ -150,10 +148,6 @@ struct EmployeeListView: View {
             }
         }
         .toolbarBackground(isRefreshing ? .visible : .automatic, for: .navigationBar)
-        //        .toolbarBackground(Color(.systemBackground), for: .navigationBar)
-        //        .safeAreaInset(edge: .bottom) {
-        //            NetworkStatusBanner(state: viewModel.networkBannerState)
-        //        }
         .task {
             await viewModel.initialLoad()
         }

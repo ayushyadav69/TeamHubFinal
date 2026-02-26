@@ -64,9 +64,6 @@ struct FieldOptionsPopover: View {
                     
                 
             }
-//            .padding(.bottom)
-            
-
             
         }
         .padding()

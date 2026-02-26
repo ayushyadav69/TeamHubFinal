@@ -7,6 +7,10 @@
 
 import Foundation
 
+protocol DateParsing {
+    func parse(_ string: String) -> Date?
+}
+
 struct APIDateParser: DateParsing {
     
     private let formatter: DateFormatter

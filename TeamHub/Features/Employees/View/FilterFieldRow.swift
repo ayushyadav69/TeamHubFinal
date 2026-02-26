@@ -36,7 +36,6 @@ struct FilterFieldRow: View {
                     .foregroundStyle(.tertiary)
             }
             .contentShape(Rectangle())
-//            .background(.regularMaterial)
             .onTapGesture(perform: action)
     }
 }

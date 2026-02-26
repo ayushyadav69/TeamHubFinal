@@ -77,12 +77,6 @@ struct GenericFilterPanel: View {
                 }
     }
         .background(.regularMaterial)
-        
-//        .opacity(openedSection != nil ? 0.9 : 1)
-//        .animation(.easeInOut(duration: 0.15), value: openedSection)
-//        .padding(14)
-//        .frame(width: 320)
-//        .fixedSize(horizontal: false, vertical: true)
         .popover(isPresented: Binding(
             get: { openedSection != nil },
             set: { if !$0 { openedSection = nil } }

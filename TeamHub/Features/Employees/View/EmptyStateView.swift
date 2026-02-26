@@ -10,7 +10,6 @@ import SwiftUI
 struct EmptyStateView: View {
 
     let message: String
-    var retryAction: (() -> Void)? = nil
 
     var body: some View {
         VStack {
@@ -28,18 +27,6 @@ struct EmptyStateView: View {
                     .multilineTextAlignment(.center)
                     .padding(.horizontal)
 
-                if let retryAction {
-                    Button(action: retryAction) {
-                        Text("Retry")
-                            .font(.headline)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.accentColor)
-                            .foregroundStyle(.white)
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
-                    }
-                    .padding(.horizontal, 40)
-                }
             }
 
             Spacer()
