@@ -53,13 +53,9 @@ struct EmployeeListView: View {
                         .interactiveDismissDisabled()
                     }
                 }
-                //                StatusHeaderView()
                 EmployeeStatusHeaderView()
             }
             Divider()
-            //            .fixedSize(horizontal: false, vertical: true)
-            
-            
             
             // 1️⃣ Shimmer State
             if viewModel.employees.isEmpty && ( viewModel.isSyncing || viewModel.isLoading || viewModel.isInitialLoading ) {
@@ -88,37 +84,35 @@ struct EmployeeListView: View {
             // 4️⃣ Normal List
             else {
                 ZStack {
-                List {
-                    //                        StatusHeaderView()
-                    
-                    ForEach(viewModel.employees) { employee in
-                        EmployeeRowView(employee: employee)
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                coordinator.path.append(AppRoute.employeeDetail(employee))
-                            }
-                            .onAppear {
-                                viewModel.loadMoreIfNeeded(current: employee)
-                            }
+                    List {
+                        ForEach(viewModel.employees) { employee in
+                            EmployeeRowView(employee: employee)
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    coordinator.path.append(AppRoute.employeeDetail(employee))
+                                }
+                                .onAppear {
+                                    viewModel.loadMoreIfNeeded(current: employee)
+                                }
+                        }
+                        
+                        if viewModel.isLoading && viewModel.canLoadMore {
+                            HStack { Spacer(); ProgressView(); Spacer() }
+                                .listRowSeparator(.hidden)
+                        }
+                        
+                        if !viewModel.canLoadMore && !viewModel.employees.isEmpty {
+                            EndOfListBanner()
+                                .listRowSeparator(.hidden)
+                        }
                     }
-                    
-                    if viewModel.isLoading && viewModel.canLoadMore {
-                        HStack { Spacer(); ProgressView(); Spacer() }
-                            .listRowSeparator(.hidden)
+                    .listStyle(.plain)
+                    .ignoresSafeArea(.keyboard, edges: .bottom)
+                    .refreshable {
+                        isRefreshing = true
+                        await viewModel.refresh()
+                        isRefreshing = false
                     }
-                    
-                    if !viewModel.canLoadMore && !viewModel.employees.isEmpty {
-                        EndOfListBanner()
-                            .listRowSeparator(.hidden)
-                    }
-                }
-                .listStyle(.plain)
-                .ignoresSafeArea(.keyboard, edges: .bottom)
-                .refreshable {
-                    isRefreshing = true
-                    await viewModel.refresh()
-                    isRefreshing = false
-                }
                     if showFilters {
                         Color(.label).opacity(0.15)
                             .ignoresSafeArea()
@@ -126,9 +120,6 @@ struct EmployeeListView: View {
                     }
                 }
             }
-            
-            
-            
         }
         .alert(item: $vm.appError) { error in
             Alert(

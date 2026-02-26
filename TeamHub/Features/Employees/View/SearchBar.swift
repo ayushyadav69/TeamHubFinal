@@ -42,7 +42,6 @@ struct SearchBar: View {
                 .fill(Color(.secondarySystemBackground))
         )
         .padding(.leading)
-//        .padding(.bottom, 8)
         .background(Color(.systemBackground)) // blends with navbar like native search
     }
 }

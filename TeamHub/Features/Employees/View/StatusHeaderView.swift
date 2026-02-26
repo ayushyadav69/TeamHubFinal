@@ -34,11 +34,8 @@ struct StatusHeaderView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
-
-//            Spacer()
         }
         .padding(.horizontal)
         .background(Color(.systemBackground))
-        
     }
 }

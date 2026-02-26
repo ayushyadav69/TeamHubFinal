@@ -7,6 +7,11 @@
 
 import Foundation
 
+protocol SyncPolicy {
+    func shouldSync() -> Bool
+    func markSynced()
+}
+
 final class DefaultSyncPolicy: SyncPolicy {
 
     private let userDefaults: UserDefaults

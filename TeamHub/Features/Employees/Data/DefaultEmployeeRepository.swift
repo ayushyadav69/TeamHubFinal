@@ -230,8 +230,8 @@ final class DefaultEmployeeRepository: EmployeeRepository {
             if let existing = localDict[employee.id] {
 
                 // Ensure relations exist
-                existing.department = try department(named: employee.department)
-                existing.role = try role(named: employee.role)
+//                existing.department = try department(named: employee.department)
+//                existing.role = try role(named: employee.role)
 
                 // Update only if needed
                 if hasChanges(existing, comparedTo: employee) {
@@ -244,8 +244,8 @@ final class DefaultEmployeeRepository: EmployeeRepository {
             } else {
 
                 let newEntity = EmployeeEntity.fromDomain(employee)
-                newEntity.department = try department(named: employee.department)
-                newEntity.role = try role(named: employee.role)
+                try department(named: employee.department)
+                try role(named: employee.role)
                 context.insert(newEntity)
 
                 didChange = true
@@ -295,8 +295,8 @@ final class DefaultEmployeeRepository: EmployeeRepository {
         entity.joiningDate = employee.joiningDate
 
         // IMPORTANT: ensure metadata tables always populated
-        entity.department = try department(named: employee.department)
-        entity.role = try role(named: employee.role)
+        try department(named: employee.department)
+        try role(named: employee.role)
     }
 
     
@@ -322,34 +322,34 @@ final class DefaultEmployeeRepository: EmployeeRepository {
 
     }
     
-    private func department(named name: String) throws -> DepartmentEntity {
+    private func department(named name: String) throws {
 
         let descriptor = FetchDescriptor<DepartmentEntity>(
             predicate: #Predicate { $0.name == name }
         )
 
-        if let existing = try context.fetch(descriptor).first {
-            return existing
+        if try context.fetch(descriptor).first != nil {
+            return
         }
 
         let new = DepartmentEntity(name: name)
         context.insert(new)
-        return new
+        
     }
 
-    private func role(named name: String) throws -> RoleEntity {
+    private func role(named name: String) throws {
 
         let descriptor = FetchDescriptor<RoleEntity>(
             predicate: #Predicate { $0.name == name }
         )
 
-        if let existing = try context.fetch(descriptor).first {
-            return existing
+        if try context.fetch(descriptor).first != nil {
+            return
         }
 
         let new = RoleEntity(name: name)
         context.insert(new)
-        return new
+
     }
 
 

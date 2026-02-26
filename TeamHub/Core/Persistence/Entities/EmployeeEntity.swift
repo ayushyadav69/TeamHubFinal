@@ -21,8 +21,8 @@ final class EmployeeEntity {
     var departmentName: String
     
     // new
-    var department: DepartmentEntity?
-    var role: RoleEntity?
+//    var department: DepartmentEntity?
+//    var role: RoleEntity?
     
     var isActive: Bool
     var imageURL: String
@@ -78,8 +78,8 @@ extension EmployeeEntity {
         Employee(
             id: id,
             name: name,
-            role: role?.name ?? roleName,
-            department: department?.name ?? departmentName,
+            role: roleName,
+            department: departmentName,
             isActive: isActive,
             imageURL: URL(string: imageURL),
             email: email,
