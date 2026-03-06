@@ -17,11 +17,15 @@ struct EmployeeRowView: View {
             CachedAsyncImage(url: employee.imageURL) { image in
                 image.resizable()
             } placeholder: {
-                Image(systemName: "person.fill")
-                    .resizable()
-                    .scaledToFit()
-                    .padding(12)
-                    .background(Color(.secondarySystemBackground))
+                ZStack {
+                        Circle()
+                            .fill(Color(.secondarySystemBackground))
+
+                    Text(employee.name.initials)
+                            .font(.title)
+                            .fontWeight(.semibold)
+                            .foregroundStyle(.secondary)
+                    }
             }
             .frame(width: 60, height: 60)
             .clipShape(Circle())

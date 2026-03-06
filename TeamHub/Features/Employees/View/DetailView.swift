@@ -27,11 +27,14 @@ struct DetailView: View {
             CachedAsyncImage(url: employee.imageURL) { image in
                 image.resizable()
             } placeholder: {
-                Image(systemName: "person.fill")
-                    .resizable()
-                    .scaledToFill()
-                    .padding(30)
-                    .background(Color(.secondarySystemBackground))
+                ZStack {
+                        Circle()
+                            .fill(Color(.secondarySystemBackground))
+
+                    Text(employee.name.initials)
+                        .font(.system(size: 100, weight: .semibold))
+                            .foregroundStyle(.secondary)
+                    }
             }
             .frame(width: 200, height: 200)
             .clipShape(Circle())
