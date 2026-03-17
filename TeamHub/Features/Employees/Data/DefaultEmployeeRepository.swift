@@ -38,16 +38,26 @@ final class DefaultEmployeeRepository: EmployeeRepository {
     func fetchAndSync(force: Bool) async throws -> Bool {
 
         guard networkMonitor.isConnected else {
-            print("⚠️ No internet. Skipping sync.")
+            print("No internet. Skipping sync.")
             return false
         }
+        
+        let paging = PagingRequest(page: 0, pageSize: 10)
 
         if !force && !syncPolicy.shouldSync() {
             return false
         }
+        if force {
+            try clearDatabase()
+        }
 
         let response: EmployeeResponseDTO =
-            try await apiClient.request(EmployeeEndpoint.getEmployees)
+        try await apiClient.request(
+            EmployeeEndpoint.getEmployees(
+                limit: paging.pageSize,
+                offset: paging.offset
+            )
+        )
 
         let domainEmployees = response.data.employees.map {
             $0.toDomain(dateParser: dateParser)
@@ -62,6 +72,26 @@ final class DefaultEmployeeRepository: EmployeeRepository {
         return changed
     }
 
+    func fetchPageFromAPI(paging: PagingRequest) async throws -> [Employee] {
+
+        guard networkMonitor.isConnected else { return []}
+
+        let response: EmployeeResponseDTO =
+            try await apiClient.request(
+                EmployeeEndpoint.getEmployees(
+                    limit: paging.pageSize,
+                    offset: paging.offset
+                )
+            )
+
+        let employees = response.data.employees.map {
+            $0.toDomain(dateParser: dateParser)
+        }
+
+        _ = try sync(employees)
+        
+        return employees
+    }
 
     // MARK: - Paging + Filtering
 
@@ -111,7 +141,7 @@ final class DefaultEmployeeRepository: EmployeeRepository {
             ]
         )
 
-        // 🔥 REAL DATABASE PAGINATION
+        // REAL DATABASE PAGINATION
         descriptor.fetchLimit = paging.pageSize
         descriptor.fetchOffset = paging.page * paging.pageSize
 
@@ -224,15 +254,15 @@ final class DefaultEmployeeRepository: EmployeeRepository {
         )
 
         let remoteIDs = Set(remoteEmployees.map { $0.id })
-
+        
         for employee in remoteEmployees {
-
+            
             if let existing = localDict[employee.id] {
-
+                
                 // Ensure relations exist
-//                existing.department = try department(named: employee.department)
-//                existing.role = try role(named: employee.role)
-
+//                try department(named: employee.department)
+//                try role(named: employee.role)
+                
                 // Update only if needed
                 if hasChanges(existing, comparedTo: employee) {
                     try applyChanges(from: employee, to: existing)
@@ -252,20 +282,13 @@ final class DefaultEmployeeRepository: EmployeeRepository {
             }
         }
 
-        // deletions
-        for remaining in localDict.values {
-            if !remoteIDs.contains(remaining.id) {
-                context.delete(remaining)
-                didChange = true
-            }
-        }
-
         if didChange {
             try context.save()
         }
 
         return didChange
     }
+
 
     // MARK: - Helpers
 
@@ -323,33 +346,54 @@ final class DefaultEmployeeRepository: EmployeeRepository {
     }
     
     private func department(named name: String) throws {
+        
+        let normalized = name
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .capitalized
 
         let descriptor = FetchDescriptor<DepartmentEntity>(
-            predicate: #Predicate { $0.name == name }
+            predicate: #Predicate { $0.name == normalized }
         )
 
         if try context.fetch(descriptor).first != nil {
             return
         }
 
-        let new = DepartmentEntity(name: name)
+        let new = DepartmentEntity(name: normalized)
         context.insert(new)
         
     }
 
     private func role(named name: String) throws {
+        
+        let normalized = name
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .capitalized
 
         let descriptor = FetchDescriptor<RoleEntity>(
-            predicate: #Predicate { $0.name == name }
+            predicate: #Predicate { $0.name == normalized }
         )
 
         if try context.fetch(descriptor).first != nil {
             return
         }
 
-        let new = RoleEntity(name: name)
+        let new = RoleEntity(name: normalized)
         context.insert(new)
 
+    }
+    
+    func clearDatabase() throws {
+        
+        let employees = try context.fetch(FetchDescriptor<EmployeeEntity>())
+        let departments = try context.fetch(FetchDescriptor<DepartmentEntity>())
+        let roles = try context.fetch(FetchDescriptor<RoleEntity>())
+        
+        for item in employees { context.delete(item) }
+        for item in departments { context.delete(item) }
+        for item in roles { context.delete(item) }
+        
+        try context.save()
     }
 
 

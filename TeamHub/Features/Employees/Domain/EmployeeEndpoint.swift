@@ -8,7 +8,16 @@
 import Foundation
 
 enum EmployeeEndpoint {
-    static var getEmployees: Endpoint {
-        Endpoint(path: "/employees", method: .get, queryItems: nil)
+
+    static func getEmployees(limit: Int, offset: Int) -> Endpoint {
+
+        Endpoint(
+            path: "/employees",
+            method: .get,
+            queryItems: [
+                URLQueryItem(name: "limit", value: "\(limit)"),
+                URLQueryItem(name: "offset", value: "\(offset)")
+            ]
+        )
     }
 }

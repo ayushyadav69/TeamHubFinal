@@ -16,6 +16,7 @@ final class EmployeeListViewModel {
     
     private let repository: EmployeeRepository
     private let networkMonitor: NetworkMonitor
+    private let pageKey = "EmployeeListCurrentPage"
     
     // MARK: - UI State
     
@@ -41,7 +42,7 @@ final class EmployeeListViewModel {
         didSet { resetAndReload() }
     }
     
-    // 🔥 DB-Level Counts (not page-level)
+    // DB-Level Counts (not page-level)
     var totalCount: Int = 0
     var activeCount: Int = 0
     var inactiveCount: Int = 0
@@ -58,7 +59,7 @@ final class EmployeeListViewModel {
     // MARK: - Paging
     
     private var currentPage = 0
-    private let pageSize = 20
+    private let pageSize = 10
     var canLoadMore = true
     
     // MARK: - Init
@@ -69,6 +70,10 @@ final class EmployeeListViewModel {
     ) {
         self.repository = repository
         self.networkMonitor = networkMonitor
+        
+        // restore saved page
+//           currentPage = UserDefaults.standard.integer(forKey: pageKey)
+        
         observeConnectivity()
     }
     
@@ -141,6 +146,7 @@ final class EmployeeListViewModel {
     func loadInitialPage() async {
         
         currentPage = 0
+        UserDefaults.standard.set(currentPage, forKey: pageKey)
         canLoadMore = true
         employees.removeAll()
         await loadNextPage()
@@ -149,36 +155,63 @@ final class EmployeeListViewModel {
     }
     
     func loadNextPage() async {
-        
+
         guard !isLoading, canLoadMore else { return }
-        
+
         isLoading = true
         defer { isLoading = false }
-        
+
         do {
+
             let paging = PagingRequest(
                 page: currentPage,
                 pageSize: pageSize
             )
-            
-            let newEmployees = try repository.fetchPage(
+
+            var newEmployees = try repository.fetchPage(
                 searchText: searchText.isEmpty ? nil : searchText,
                 departments: selectedDepartments,
                 roles: selectedRoles,
                 statuses: selectedStatuses,
                 paging: paging
             )
-            
-            employees.append(contentsOf: newEmployees)
-            
-            if newEmployees.count < pageSize {
-                canLoadMore = false
-            } else {
-                currentPage += 1
+
+            // If DB has nothing, try API
+            if newEmployees.isEmpty && networkMonitor.isConnected {
+
+                let apiEmployees = try await repository.fetchPageFromAPI(paging: paging)
+
+                if apiEmployees.count < pageSize {
+                    canLoadMore = false
+                }
+
+                newEmployees = try repository.fetchPage(
+                    searchText: searchText.isEmpty ? nil : searchText,
+                    departments: selectedDepartments,
+                    roles: selectedRoles,
+                    statuses: selectedStatuses,
+                    paging: paging
+                )
             }
-            
-            // 🔥 Always refresh counts from DB8u8
-            
+
+            // If still empty → no more data
+            if newEmployees.isEmpty {
+                canLoadMore = false
+                return
+            }
+
+//            let existingIDs = Set(employees.map(\.id))
+//            let uniqueEmployees = newEmployees.filter { !existingIDs.contains($0.id) }
+
+            employees.append(contentsOf: newEmployees)
+
+            // Page consumed
+            currentPage += 1
+            UserDefaults.standard.set(currentPage, forKey: pageKey)
+
+            await loadFilters()
+            loadCounts()
+
         } catch is CancellationError {
             // ignore silently
         } catch {

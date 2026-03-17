@@ -11,7 +11,9 @@ protocol EmployeeRepository {
 
     func fetchAndSync(force: Bool) async throws -> Bool
     
-    // 🔥 MULTI FILTER
+    func fetchPageFromAPI(paging: PagingRequest) async throws -> [Employee]
+    
+    // MULTI FILTER
     func fetchPage(
         searchText: String?,
         departments: Set<String>,

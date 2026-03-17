@@ -90,15 +90,24 @@ struct EmployeeListView: View {
                                 .onTapGesture {
                                     coordinator.path.append(AppRoute.employeeDetail(employee))
                                 }
-                                .onAppear {
-                                    viewModel.loadMoreIfNeeded(current: employee)
-                                }
+//                                .onAppear {
+//                                    viewModel.loadMoreIfNeeded(current: employee)
+                            //                                }
                         }
                         
-                        if viewModel.isLoading && viewModel.canLoadMore {
-                            HStack { Spacer(); ProgressView(); Spacer() }
-                                .listRowSeparator(.hidden)
-                        }
+                        if viewModel.canLoadMore {
+                            HStack {
+                                Spacer()
+                                ProgressView()
+                                    .frame(maxWidth: .infinity)
+                                    .frame(height: 50)
+                                    .onAppear {
+                                        Task { await viewModel.loadNextPage() }
+                                    }
+                                Spacer()
+                                }
+                            .id(UUID())
+                            }
                         
                         if !viewModel.canLoadMore && !viewModel.employees.isEmpty {
                             EndOfListBanner()
